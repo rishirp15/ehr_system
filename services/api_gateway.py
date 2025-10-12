@@ -6,11 +6,8 @@ from itertools import cycle
 app = Flask(__name__)
 CORS(app)
 
-# --- CORRECTED: Use a special Docker DNS name for WSL2/macOS compatibility ---
-# 'host.docker.internal' resolves to the internal IP address of the host machine
-# from within a container. This makes the connection from the gateway to the
-# app nodes more reliable in some Docker environments.
-
+# Use 'host.docker.internal' for reliable cross-container communication
+# from a port mapped to the host, especially on Docker Desktop (Windows/Mac).
 APP_NODE_URLS = [
     "http://host.docker.internal:6001",
     "http://host.docker.internal:6002",
@@ -35,7 +32,7 @@ def proxy_request(path):
             data=request.get_data(),
             cookies=request.cookies,
             allow_redirects=False,
-            timeout=20 # Increased timeout slightly for safety
+            timeout=20 # Generous timeout for distributed operations
         )
 
         headers = [(name, value) for (name, value) in response.raw.headers.items()]

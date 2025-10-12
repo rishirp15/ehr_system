@@ -81,23 +81,10 @@ def add_record():
 
 @app.route('/records/<string:patient_uuid>', methods=['GET'])
 def get_records(patient_uuid):
-    # Pass accessor_id for auditing
-    accessor_id = request.args.get('accessor_id', 'Unknown')
-    cache_key = f"records:{patient_uuid}"
-    
-    # Don't cache audited reads to ensure logs are always created
-    # if redis_client:
-    #     cached_data = redis_client.get(cache_key)
-    #     if cached_data:
-    #         return jsonify(json.loads(cached_data)), 200
-    
+    accessor_id = request.args.get('accessor_id', 'Unknown Clinician')
     payload = {"uuid": patient_uuid, "accessor_id": accessor_id}
+    # We don't cache this read because it needs to generate a fresh audit log entry every time.
     rpc_response = send_rpc_to_data_node({"action": "get_records_by_uuid", "data": payload})
-    
-    # if redis_client and rpc_response.get('status') == 'success':
-    #     data_to_cache = rpc_response.get('data')
-    #     if data_to_cache is not None:
-    #         redis_client.set(cache_key, json.dumps(data_to_cache), ex=CACHE_TTL_SECONDS)
             
     status_code = rpc_response.get('code', 500)
     return jsonify(rpc_response.get('data', {"error": rpc_response.get('error')})), status_code
@@ -120,10 +107,9 @@ def get_all_patients():
     status_code = 200 if response.get("status") == "success" else 500
     return jsonify(response.get("data", [])), status_code
 
-# --- NEW: Audit Log Endpoint ---
 @app.route('/audit/<string:record_id>', methods=['GET'])
 def get_audit_log(record_id):
-    # No caching for audit logs to ensure real-time data
+    # Audit logs should not be cached to ensure real-time accuracy.
     rpc_response = send_rpc_to_data_node({
         "action": "get_audit_log",
         "data": {"record_id": record_id}

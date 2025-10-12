@@ -1,108 +1,112 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthChain - Patient Portal</title>
+    <title>MediSync Pro - Patient Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .form-input { @apply w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent sm:text-sm transition-shadow; }
-        .btn-primary { @apply w-full inline-flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors disabled:bg-teal-300; }
-        .card { @apply bg-white p-6 rounded-xl shadow-lg border border-gray-200; }
-        .toast {
-            position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            opacity: 0; transform: translateY(-20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            z-index: 50;
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
         }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .form-input {
+            color-scheme: dark;
+            @apply w-full px-4 py-3 border border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent sm:text-sm transition-all bg-slate-800/50 text-white;
+        }
+        .btn-primary {
+            @apply w-full inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all disabled:bg-teal-800;
+        }
+        .card { @apply bg-slate-800/50 p-6 rounded-xl shadow-lg border border-slate-700; }
+        .toast { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; z-index: 50; }
         .toast.show { opacity: 1; transform: translateY(0); }
-        .loader {
-            border: 4px solid #f3f3f3; border-top: 4px solid #14b8a6;
-            border-radius: 50%; width: 24px; height: 24px;
-            animation: spin 1s linear infinite;
-        }
+        .loader { border: 4px solid #0d9488; border-top: 4px solid #2dd4bf; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .record-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(51, 65, 85, 0.7) 100%);
+            border: 1px solid #475569;
+            transition: all 0.3s ease;
+        }
+        .record-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); border-color: #14b8a6; }
     </style>
 </head>
-<body class="h-full flex items-center justify-center bg-gray-100 p-4">
+<body class="h-full text-white">
+    <div class="min-h-screen">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div id="auth-view">
+                <div class="max-w-md mx-auto">
+                    <div class="card p-8">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </div>
+                            <h2 class="text-3xl font-bold text-white mb-2">MediSync Pro</h2>
+                            <p class="text-slate-400">Securely Access Your Health Records</p>
+                        </div>
+                
+                        <div class="border-b border-slate-600 mb-6">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <button id="login-tab-button" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-teal-400 border-teal-400">Sign In</button>
+                                <button id="register-tab-button" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-400 hover:text-slate-300 hover:border-slate-300 border-transparent">Create Account</button>
+                            </nav>
+                        </div>
+
+                        <div id="login-form-container">
+                            <form id="login-form" class="space-y-6">
+                                <div><label for="login-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="login-username" type="text" required class="form-input" placeholder="Enter your username"></div>
+                                <div><label for="login-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="login-password" type="password" required class="form-input" placeholder="Enter your password"></div>
+                                <div><button id="login-btn" type="submit" class="btn-primary"><span class="btn-text">Secure Sign In</span><div class="loader hidden"></div></button></div>
+                            </form>
+                        </div>
+
+                        <div id="register-form-container" class="hidden">
+                            <form id="register-form" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label for="reg-first-name" class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input id="reg-first-name" type="text" required class="form-input" placeholder="John"></div>
+                                    <div><label for="reg-last-name" class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input id="reg-last-name" type="text" required class="form-input" placeholder="Doe"></div>
+                                </div>
+                                <div><label for="reg-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="reg-username" type="text" required class="form-input" placeholder="johndoe"></div>
+                                <div><label for="reg-dob" class="block text-sm font-medium text-slate-300 mb-2">Date of Birth</label><input id="reg-dob" type="date" required class="form-input"></div>
+                                <div><label for="reg-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="reg-password" type="password" required class="form-input" placeholder="Create a secure password"></div>
+                                <div><button id="register-btn" type="submit" class="btn-primary"><span class="btn-text">Register Account</span><div class="loader hidden"></div></button></div>
+                            </form>
+                        </div>
+                        <div id="auth-message-box" class="mt-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dashboard-view" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">My Health Dashboard</h1>
+                        <p id="welcome-message" class="text-slate-400 mt-1">Welcome back!</p>
+                    </div>
+                    <button id="logout-button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors">Sign Out</button>
+                </div>
+                <div class="card mb-8">
+                    <h2 class="text-xl font-semibold text-white mb-4">Personal Information</h2>
+                    <div id="user-info" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+                <div class="card">
+                    <h2 class="text-xl font-semibold text-white mb-6">Medical History</h2>
+                    <div id="records-list" class="space-y-4"></div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <div id="toast-notification" class="toast"></div>
 
-    <div id="app" class="max-w-4xl w-full">
-        <div id="auth-view">
-            <div class="max-w-md mx-auto">
-                <header class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center bg-teal-100 rounded-full p-3">
-                        <svg class="h-10 w-10 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                        </svg>
-                    </div>
-                    <h1 class="text-4xl font-extrabold text-gray-900 mt-4">HealthChain Portal</h1>
-                </header>
-                
-                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-                    <div class="border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                            <button id="login-tab-button" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-teal-600 border-teal-500 ">Sign In</button>
-                            <button id="register-tab-button" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 border-transparent">Create Account</button>
-                        </nav>
-                    </div>
-
-                    <div id="login-form-container" class="mt-6">
-                        <form id="login-form" class="space-y-6">
-                            <div><label for="login-username" class="block text-sm font-medium text-gray-700">Username</label><input id="login-username" type="text" required class="form-input mt-1"></div>
-                            <div><label for="login-password" class="block text-sm font-medium text-gray-700">Password</label><input id="login-password" type="password" required class="form-input mt-1"></div>
-                            <div><button id="login-btn" type="submit" class="btn-primary"><span class="btn-text">Sign In</span><div class="loader hidden"></div></button></div>
-                        </form>
-                    </div>
-
-                    <div id="register-form-container" class="mt-6 hidden">
-                        <form id="register-form" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label for="reg-first-name" class="block text-sm font-medium text-gray-700">First Name</label><input id="reg-first-name" type="text" required class="form-input mt-1"></div>
-                                <div><label for="reg-last-name" class="block text-sm font-medium text-gray-700">Last Name</label><input id="reg-last-name" type="text" required class="form-input mt-1"></div>
-                            </div>
-                            <div><label for="reg-username" class="block text-sm font-medium text-gray-700">Username</label><input id="reg-username" type="text" required class="form-input mt-1"></div>
-                            <div><label for="reg-dob" class="block text-sm font-medium text-gray-700">Date of Birth</label><input id="reg-dob" type="date" required class="form-input mt-1"></div>
-                            <div><label for="reg-password" class="block text-sm font-medium text-gray-700">Password</label><input id="reg-password" type="password" required class="form-input mt-1"></div>
-                            <div><button id="register-btn" type="submit" class="btn-primary"><span class="btn-text">Create Account</span><div class="loader hidden"></div></button></div>
-                        </form>
-                    </div>
-                    <div id="auth-message-box" class="mt-4"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="dashboard-view" class="hidden">
-            <header class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Patient Dashboard</h1>
-                    <p id="welcome-message" class="text-gray-600 mt-1"></p>
-                </div>
-                <button id="logout-button" class="text-sm font-medium text-teal-600 hover:text-teal-500">Sign Out &rarr;</button>
-            </header>
-
-            <main class="space-y-8">
-                <div class="card">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Personal Information</h2>
-                    <div id="user-info" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-gray-700 text-sm"></div>
-                </div>
-                <div class="card">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Medical Records</h2>
-                    <div id="records-list" class="space-y-6"></div>
-                </div>
-            </main>
-        </div>
-    </div>
-
     <script>
         const API_URL = 'http://localhost:5000';
-
-        // DOM Elements
         const authView = document.getElementById('auth-view'), dashboardView = document.getElementById('dashboard-view');
         const authMessageBox = document.getElementById('auth-message-box');
         const loginTabButton = document.getElementById('login-tab-button'), registerTabButton = document.getElementById('register-tab-button');
@@ -112,171 +116,47 @@
         const logoutButton = document.getElementById('logout-button');
         const toastNotification = document.getElementById('toast-notification');
 
-        // Event Listeners
         loginTabButton.addEventListener('click', () => switchTab('login'));
         registerTabButton.addEventListener('click', () => switchTab('register'));
         registerForm.addEventListener('submit', handleRegister);
         loginForm.addEventListener('submit', handleLogin);
         logoutButton.addEventListener('click', handleLogout);
-
-        // --- Logic ---
+        
         function switchTab(tab) {
             authMessageBox.innerHTML = '';
-            const activeClasses = ['text-teal-600', 'border-teal-500'];
-            const inactiveClasses = ['text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'border-transparent'];
+            const activeClasses = ['text-teal-400', 'border-teal-400'];
+            const inactiveClasses = ['text-slate-400', 'hover:text-slate-300', 'hover:border-slate-300', 'border-transparent'];
             if (tab === 'login') {
-                loginTabButton.classList.add(...activeClasses);
-                loginTabButton.classList.remove(...inactiveClasses);
-                registerTabButton.classList.add(...inactiveClasses);
-                registerTabButton.classList.remove(...activeClasses);
-                loginFormContainer.classList.remove('hidden');
-                registerFormContainer.classList.add('hidden');
+                loginTabButton.classList.remove(...inactiveClasses); loginTabButton.classList.add(...activeClasses);
+                registerTabButton.classList.remove(...activeClasses); registerTabButton.classList.add(...inactiveClasses);
+                loginFormContainer.classList.remove('hidden'); registerFormContainer.classList.add('hidden');
             } else {
-                registerTabButton.classList.add(...activeClasses);
-                registerTabButton.classList.remove(...inactiveClasses);
-                loginTabButton.classList.add(...inactiveClasses);
-                loginTabButton.classList.remove(...activeClasses);
-                registerFormContainer.classList.remove('hidden');
-                loginFormContainer.classList.add('hidden');
+                registerTabButton.classList.remove(...inactiveClasses); registerTabButton.classList.add(...activeClasses);
+                loginTabButton.classList.remove(...activeClasses); loginTabButton.classList.add(...inactiveClasses);
+                registerFormContainer.classList.remove('hidden'); loginFormContainer.classList.add('hidden');
             }
         }
         
-        async function handleRegister(e) {
-            e.preventDefault();
-            toggleButtonLoading(registerBtn, true);
-            
-            const payload = {
-                first_name: document.getElementById('reg-first-name').value,
-                last_name: document.getElementById('reg-last-name').value,
-                username: document.getElementById('reg-username').value,
-                dob: document.getElementById('reg-dob').value,
-                password: document.getElementById('reg-password').value,
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/add_account`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await response.json();
-                if (response.ok && data.status === 'success') {
-                    showAuthMessage(`
-                        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-md">
-                            <div class="flex">
-                                <div class="flex-shrink-0"><svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></div>
-                                <div class="ml-3"><p class="text-sm text-green-700">Account created! Please switch to the Sign In tab.</p></div>
-                            </div>
-                        </div>`);
-                    registerForm.reset();
-                } else {
-                    showAuthMessage(`<div class="text-red-600 text-sm text-center">${data.error}</div>`);
-                }
-            } catch (error) {
-                showToast('Error: Could not connect to the server.', 'bg-red-500 text-white');
-            } finally {
-                toggleButtonLoading(registerBtn, false);
-            }
-        }
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            toggleButtonLoading(loginBtn, true);
-            
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                const response = await fetch(`${API_URL}/get_data/${username}`, { headers: { 'Authorization': 'Basic ' + btoa(`${username}:${password}`) } });
-                if (response.ok) {
-                    const data = await response.json();
-                    showDashboard(data);
-                } else {
-                    const errorData = await response.json();
-                    showAuthMessage(`<div class="text-red-600 text-sm text-center">${errorData.error}</div>`);
-                }
-            } catch (error) {
-                showToast('Error: Could not connect to the server.', 'bg-red-500 text-white');
-            } finally {
-                toggleButtonLoading(loginBtn, false);
-            }
-        }
-
-        function handleLogout() {
-            authView.classList.remove('hidden');
-            dashboardView.classList.add('hidden');
-            loginForm.reset();
-            authMessageBox.innerHTML = '';
-        }
+        async function handleRegister(e) { e.preventDefault(); toggleButtonLoading(registerBtn, true); const payload = { first_name: document.getElementById('reg-first-name').value, last_name: document.getElementById('reg-last-name').value, username: document.getElementById('reg-username').value, dob: document.getElementById('reg-dob').value, password: document.getElementById('reg-password').value, }; try { const response = await fetch(`${API_URL}/add_account`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await response.json(); if (response.ok && data.status === 'success') { showAuthMessage(`<div class="bg-green-500/20 border border-green-500/50 text-green-300 p-3 rounded-lg text-sm">Account created! Please Sign In.</div>`); registerForm.reset(); } else { showAuthMessage(`<div class="text-red-400 text-sm text-center">${data.error || 'An unknown error occurred.'}</div>`); } } catch (error) { showToast('Error: Could not connect to the server.', 'error'); } finally { toggleButtonLoading(registerBtn, false); } }
+        async function handleLogin(e) { e.preventDefault(); toggleButtonLoading(loginBtn, true); const username = document.getElementById('login-username').value; const password = document.getElementById('login-password').value; try { const response = await fetch(`${API_URL}/get_data/${username}`, { headers: { 'Authorization': 'Basic ' + btoa(`${username}:${password}`) } }); if (response.ok) { const data = await response.json(); showDashboard(data); showToast('Welcome back!', 'success'); } else { const errorData = await response.json(); showAuthMessage(`<div class="text-red-400 text-sm text-center">${errorData.error || 'Invalid credentials or server error.'}</div>`); } } catch (error) { showToast('Error: Could not connect to the server.', 'error'); } finally { toggleButtonLoading(loginBtn, false); } }
+        function handleLogout() { authView.classList.remove('hidden'); dashboardView.classList.add('hidden'); loginForm.reset(); authMessageBox.innerHTML = ''; showToast('You have been signed out.', 'info'); }
         
         function showDashboard(data) {
             const { user_info, records } = data;
             document.getElementById('welcome-message').textContent = `Welcome back, ${user_info.first_name}!`;
-            const userInfoContainer = document.getElementById('user-info');
-            userInfoContainer.innerHTML = `
-                <div><strong>Patient UUID:</strong> 
-                    <div class="flex items-center gap-2">
-                         <span class="text-teal-700 font-mono select-all">${user_info.uuid}</span>
-                         <button onclick="copyToClipboard('${user_info.uuid}', this)" class="text-gray-400 hover:text-teal-600" title="Copy UUID">
-                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                         </button>
-                    </div>
-                </div>
-                <div><strong>Username:</strong> ${user_info.username}</div>
-                <div><strong>Full Name:</strong> ${user_info.first_name} ${user_info.last_name}</div>
-                <div><strong>Date of Birth:</strong> ${user_info.dob}</div>`;
-
+            document.getElementById('user-info').innerHTML = `<div><span class="text-sm text-slate-400">Patient ID</span><div class="flex items-center gap-2 mt-1"><span class="text-teal-400 font-mono text-sm">${user_info.uuid}</span><button onclick="copyToClipboard('${user_info.uuid}')" class="text-slate-400 hover:text-teal-400 transition-colors" title="Copy ID"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button></div></div><div><span class="text-sm text-slate-400">Username</span><p class="text-white font-medium">${user_info.username}</p></div><div><span class="text-sm text-slate-400">Full Name</span><p class="text-white font-medium">${user_info.first_name} ${user_info.last_name}</p></div><div><span class="text-sm text-slate-400">Date of Birth</span><p class="text-white font-medium">${user_info.dob}</p></div>`;
+            
             const recordsList = document.getElementById('records-list');
-            if (records.length === 0) {
-                recordsList.innerHTML = '<p class="text-gray-500 text-center">You have no medical records on file.</p>';
-            } else {
-                recordsList.innerHTML = records.map(rec => `
-                    <div class="border-l-4 border-teal-500 pl-4 py-3 bg-gray-50 rounded-r-lg">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-gray-800">Visit with Dr. ${rec.doctor_name}</h3>
-                            <p class="text-xs text-gray-500 whitespace-nowrap ml-4">${new Date(rec.timestamp * 1000).toLocaleString()}</p>
-                        </div>
-                        <div class="text-sm mt-2 space-y-1 text-gray-700">
-                           <p><strong>Diagnosis:</strong> ${rec.description}</p>
-                           <p><strong>Prescription:</strong> ${rec.prescription}</p>
-                           <p><strong>Resources Used:</strong> ${rec.resources_used || 'N/A'}</p>
-                        </div>
-                    </div>`).join('');
-            }
+            if (records.length === 0) { recordsList.innerHTML = `<div class="text-center text-slate-400 py-12"><svg class="w-16 h-16 mx-auto mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><p class="text-lg font-medium">No medical records found</p><p class="text-sm">Your records will appear here once added by a clinician.</p></div>`; } 
+            else { recordsList.innerHTML = records.map(rec => `<div class="record-card rounded-lg p-6"><div class="flex justify-between items-start mb-4"><div><h3 class="font-bold text-white text-lg">Dr. ${rec.doctor_name}</h3><p class="text-sm text-slate-400">Medical Record</p></div><div class="text-right"><p class="text-xs text-slate-500 mono">${new Date(rec.timestamp * 1000).toLocaleString()}</p></div></div><div class="space-y-3 text-sm"><div><span class="font-medium text-slate-300">Diagnosis:</span><p class="text-slate-400 mt-1">${rec.description}</p></div><div><span class="font-medium text-slate-300">Prescription:</span><p class="text-slate-400 mt-1">${rec.prescription}</p></div><div><span class="font-medium text-slate-300">Resources Used:</span><p class="text-slate-400 mt-1">${rec.resources_used || 'None specified'}</p></div></div></div>`).join(''); }
             authView.classList.add('hidden');
             dashboardView.classList.remove('hidden');
         }
-
-        // --- UI Helpers ---
-        function toggleButtonLoading(button, isLoading) {
-            const btnText = button.querySelector('.btn-text');
-            const loader = button.querySelector('.loader');
-            if (isLoading) {
-                button.disabled = true;
-                btnText.classList.add('hidden');
-                loader.classList.remove('hidden');
-            } else {
-                button.disabled = false;
-                btnText.classList.remove('hidden');
-                loader.classList.add('hidden');
-            }
-        }
-
+        
+        function toggleButtonLoading(button, isLoading) { const btnText = button.querySelector('.btn-text'); const loader = button.querySelector('.loader'); if (isLoading) { button.disabled = true; btnText.classList.add('hidden'); loader.classList.remove('hidden'); } else { button.disabled = false; btnText.classList.remove('hidden'); loader.classList.add('hidden'); } }
         function showAuthMessage(html) { authMessageBox.innerHTML = html; }
-
-        function showToast(message, style) {
-            toastNotification.textContent = message;
-            toastNotification.className = `toast show ${style}`;
-            setTimeout(() => toastNotification.classList.remove('show'), 3000);
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('✅ UUID copied to clipboard!', 'bg-green-500 text-white');
-            }, () => {
-                showToast('Failed to copy.', 'bg-red-500 text-white');
-            });
-        }
+        function showToast(message, type = 'info') { const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600'; toastNotification.textContent = message; toastNotification.className = `toast show ${bgColor} text-white`; setTimeout(() => toastNotification.classList.remove('show'), 3000); }
+        function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => { showToast('✅ Patient ID copied!', 'success'); }, () => { showToast('Failed to copy.', 'error'); }); }
     </script>
 </body>
 </html>

@@ -1,15 +1,12 @@
-version: '3.8'
-
 services:
-  # This is the new service for the frontend
   frontend:
     image: nginx:alpine
     container_name: frontend
     ports:
-      - "8080:80"  # Expose the frontend on host port 8080
+      - "8080:80"
     volumes:
-      - ./nginx/html:/usr/share/nginx/html # Mounts your HTML files
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf # Mounts the config file
+      - ./nginx/html:/usr/share/nginx/html
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - ehr-net
 
@@ -30,9 +27,12 @@ services:
     networks:
       - ehr-net
     depends_on:
-      - app-node-1
-      - app-node-2
-      - app-node-3
+      app-node-1:
+        condition: service_started
+      app-node-2:
+        condition: service_started
+      app-node-3:
+        condition: service_started
 
   app-node-1:
     build: ./services
@@ -43,10 +43,14 @@ services:
     networks:
       - ehr-net
     depends_on:
-      - redis
-      - data-node-1
-      - data-node-2
-      - data-node-3
+      redis:
+        condition: service_started
+      data-node-1:
+        condition: service_healthy
+      data-node-2:
+        condition: service_healthy
+      data-node-3:
+        condition: service_healthy
 
   app-node-2:
     build: ./services
@@ -57,10 +61,14 @@ services:
     networks:
       - ehr-net
     depends_on:
-      - redis
-      - data-node-1
-      - data-node-2
-      - data-node-3
+      redis:
+        condition: service_started
+      data-node-1:
+        condition: service_healthy
+      data-node-2:
+        condition: service_healthy
+      data-node-3:
+        condition: service_healthy
 
   app-node-3:
     build: ./services
@@ -71,10 +79,14 @@ services:
     networks:
       - ehr-net
     depends_on:
-      - redis
-      - data-node-1
-      - data-node-2
-      - data-node-3
+      redis:
+        condition: service_started
+      data-node-1:
+        condition: service_healthy
+      data-node-2:
+        condition: service_healthy
+      data-node-3:
+        condition: service_healthy
 
   data-node-1:
     build: ./services
@@ -82,12 +94,14 @@ services:
     command: python data_node.py 7001 data_node_1.db
     volumes:
       - ./data/node1:/data
-    ports:
-      - "7001:7001"
-      - "8001:8001" # Port for Berkeley Clock
-      - "9001:9001" # Port for Maekawa Mutex
     networks:
       - ehr-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import xmlrpc.client; proxy = xmlrpc.client.ServerProxy('http://localhost:7001'); proxy.dispatch_rpc('ping', {})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   data-node-2:
     build: ./services
@@ -95,12 +109,14 @@ services:
     command: python data_node.py 7002 data_node_2.db
     volumes:
       - ./data/node2:/data
-    ports:
-      - "7002:7002"
-      - "8002:8002"
-      - "9002:9002"
     networks:
       - ehr-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import xmlrpc.client; proxy = xmlrpc.client.ServerProxy('http://localhost:7002'); proxy.dispatch_rpc('ping', {})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   data-node-3:
     build: ./services
@@ -108,12 +124,14 @@ services:
     command: python data_node.py 7003 data_node_3.db
     volumes:
       - ./data/node3:/data
-    ports:
-      - "7003:7003"
-      - "8003:8003"
-      - "9003:9003"
     networks:
       - ehr-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import xmlrpc.client; proxy = xmlrpc.client.ServerProxy('http://localhost:7003'); proxy.dispatch_rpc('ping', {})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
 networks:
   ehr-net:

@@ -10,7 +10,7 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the content of the local src directory to the working directory
+# Copy the rest of the application code to the working directory
 COPY . .
 
-# The command to run on container startup will be provided by docker-compose
+# The command to run on container startup will be provided by docker-compose.yml

@@ -52,7 +52,6 @@ def init_db(db_name):
             description TEXT, resources_used TEXT, prescription TEXT,
             timestamp REAL, FOREIGN KEY (patient_uuid) REFERENCES users (uuid)
         )''')
-    # --- NEW: Audit Log Table ---
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS audit_logs (
             log_id TEXT PRIMARY KEY, record_id TEXT NOT NULL, patient_uuid TEXT NOT NULL,
@@ -76,7 +75,6 @@ def send_rpc_to_peer(peer_id, action, data):
     """Sends a single RPC call to a specified peer."""
     try:
         if peer_id in rpc_proxies:
-            # The actual call to the peer's dispatch_rpc method
             return rpc_proxies[peer_id].dispatch_rpc(action, data)
     except Exception as e:
         print(f"[ERROR] Node-{NODE_ID}: Could not call '{action}' on peer {peer_id}: {e}")
@@ -111,7 +109,6 @@ def acquire_lock():
 
     request_data = {'requester_id': NODE_ID, 'ts': mutex_service.request_ts}
     
-    # Broadcast request to all nodes in the quorum
     def send_request(peer_id):
         response = send_rpc_to_peer(peer_id, "request_lock", request_data)
         if response and response == 'REPLY':
@@ -120,7 +117,6 @@ def acquire_lock():
     with ThreadPoolExecutor() as executor:
         executor.map(send_request, mutex_service.quorum_ids)
 
-    # Wait until all replies are received
     while mutex_service.state != 'HELD':
         time.sleep(0.1)
 
@@ -151,7 +147,6 @@ def log_audit_event(cursor, patient_uuid, record_id, accessor_id, action):
         "action": action,
         "timestamp": clock_service.get_time()
     }
-    # This is a simplification; in a real system, you'd add this to the quorum write
     cursor.execute(
         "INSERT INTO audit_logs (log_id, patient_uuid, record_id, accessor_id, action, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
         (log_entry['log_id'], log_entry['patient_uuid'], log_entry['record_id'], log_entry['accessor_id'], log_entry['action'], log_entry['timestamp'])
@@ -189,7 +184,6 @@ def handle_add_record(cursor, data):
         }
         success, acks = perform_quorum_write(cursor, "record", new_record)
         if success:
-            # Also log the creation event
             log_audit_event(cursor, patient_uuid, record_id, data['doctor_name'], "CREATE")
             return {"status": "success", "code": 201, "message": "Record added"}
         else:
@@ -277,7 +271,6 @@ def handle_replicate_write(cursor, data):
         return {"status": "error", "message": "Unknown record type"}
     return {"status": "success", "message": "Replication successful"}
 
-# --- Main RPC Dispatcher ---
 ACTION_MAP = {
     "add_account": handle_add_account,
     "add_record": handle_add_record,
@@ -322,14 +315,12 @@ def dispatch_rpc(action, data):
         conn.close()
     return response
 
-# --- Berkeley Master Clock Sync Thread ---
 def master_sync_loop():
-    time.sleep(10) # Initial delay for all nodes to come online
+    time.sleep(10)
     print(f"[Clock-{NODE_ID}] I am the MASTER. Starting sync loop.")
     while True:
         try:
-            master_time = time.time()
-            offsets, peer_offsets = [], {}
+            master_time, offsets, peer_offsets = time.time(), [], {}
             
             for peer_id, proxy in rpc_proxies.items():
                 try:
@@ -355,7 +346,6 @@ def master_sync_loop():
         
         time.sleep(20)
 
-# --- Main Server Function ---
 def main(port, db_name):
     global NODE_PORT, NODE_ID, DB_NAME_GLOBAL, clock_service, mutex_service
     NODE_PORT, DB_NAME_GLOBAL = port, db_name

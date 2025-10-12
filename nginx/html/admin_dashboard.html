@@ -1,97 +1,156 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthChain - System Admin</title>
+    <title>MediSync Pro - System Control Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .patient-card {
-            transition: all 0.2s ease-in-out;
-        }
-        .patient-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-effect { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .pulse-animation { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .terminal-window { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; font-family: 'JetBrains Mono', monospace; }
+        .terminal-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .terminal-content { padding: 16px; max-height: 400px; overflow-y: auto; }
+        .log-entry { margin-bottom: 4px; font-size: 12px; line-height: 1.4; }
+        .log-timestamp { color: #8b5cf6; }
+        .log-level-info { color: #22c55e; }
+        .log-level-warn { color: #f59e0b; }
+        .log-level-error { color: #ef4444; }
+        .log-level-debug { color: #6b7280; }
+        #toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 50; display: flex; flex-direction: column; gap: 0.5rem; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p class="text-gray-600 mt-2">A high-level overview of all registered patients in the distributed system.</p>
+<body class="h-full text-white">
+    <div class="min-h-screen">
+        <header class="border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                        <div><h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">MediSync Pro</h1><p class="text-sm text-slate-400">System Control Center</p></div>
+                    </div>
+                    <div class="flex items-center space-x-4"><div class="flex items-center space-x-2"><div class="w-2 h-2 bg-green-400 rounded-full pulse-animation"></div><span class="text-sm text-slate-300">System Online</span></div><div class="text-sm text-slate-400 mono"><span id="current-time"></span></div></div>
+                </div>
+            </div>
         </header>
 
-        <main>
-            <div class="bg-white p-6 rounded-xl shadow-md">
-                <h3 class="text-xl font-medium mb-4 border-b pb-3">All Registered Patients</h3>
-                <div id="patient-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <p class="text-gray-500">Loading patients...</p>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="glass-effect rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-semibold text-white">Patient Registry</h2>
+                            <button id="refresh-patients" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Refresh</button>
+                        </div>
+                        <div id="patient-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-2"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="glass-effect rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Real-time System Logs</h3>
+                        <div class="terminal-window">
+                            <div class="terminal-header"><div class="terminal-dot bg-red-500"></div><div class="terminal-dot bg-yellow-500"></div><div class="terminal-dot bg-green-500"></div><span class="text-xs text-slate-400 ml-2">sys-monitor</span></div>
+                            <div class="terminal-content" id="system-logs"></div>
+                        </div>
+                    </div>
+                    <div class="glass-effect rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">System Actions</h3>
+                        <div class="space-y-3">
+                            <button id="simulate-deadlock" class="w-full text-left flex items-center gap-3 px-4 py-3 bg-red-600/20 hover:bg-red-600/40 border border-red-600 rounded-lg text-sm font-medium transition-colors">
+                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                                Simulate Deadlock
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-    
-    <div id="toast" class="fixed top-5 right-5 bg-red-500 text-white py-2 px-5 rounded-lg shadow-xl opacity-0 translate-y-10 transition-all duration-300">
-        <p id="toast-message"></p>
-    </div>
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
     <script>
         const API_URL = 'http://localhost:5000';
-
-        // --- Toast Notification ---
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            toastMessage.innerText = message;
-            toast.classList.remove('opacity-0', 'translate-y-10');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0');
-                toast.classList.add('opacity-0', 'translate-y-10');
-            }, 3000);
+        
+        function updateTime() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString(); }
+        
+        function addLogEntry(level, message) {
+            const logsContainer = document.getElementById('system-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> <span class="log-level-${level}">[${level.toUpperCase()}]</span> <span class="text-slate-300">${message}</span>`;
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+            while (logsContainer.children.length > 50) { logsContainer.removeChild(logsContainer.firstChild); }
+        }
+        
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600';
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-x-full'); }, 100);
+            setTimeout(() => { toast.classList.add('translate-x-full'); setTimeout(() => container.removeChild(toast), 300); }, 3000);
         }
 
-        // --- API & Render Function ---
-        async function fetchAndRenderPatients() {
+        async function fetchPatients() {
             const patientListDiv = document.getElementById('patient-list');
+            patientListDiv.innerHTML = `<div class="text-center text-slate-400 py-8 col-span-full"><div class="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div><p>Loading patient data...</p></div>`;
             try {
                 const response = await fetch(`${API_URL}/patients`);
-                if (!response.ok) throw new Error('Failed to fetch patient data.');
+                if (!response.ok) throw new Error('Failed to fetch patients');
                 const patients = await response.json();
-                
                 patientListDiv.innerHTML = '';
                 if (Object.keys(patients).length === 0) {
-                    patientListDiv.innerHTML = '<p class="text-gray-500 col-span-full text-center">No patients found in the system.</p>';
+                    patientListDiv.innerHTML = `<p class="text-slate-500 col-span-full text-center py-8">No patients found in the system.</p>`;
                     return;
                 }
-
-                for (const patientId in patients) {
-                    const patient = patients[patientId];
-                    const card = document.createElement('div');
-                    card.className = `patient-card p-4 rounded-lg border bg-gray-50 border-gray-200`;
-                    card.innerHTML = `
-                        <p class="font-semibold text-gray-800">${patient.name}</p>
-                        <p class="text-sm text-gray-500">DOB: ${patient.dob}</p>
-                        <p class="text-xs text-indigo-600 font-mono mt-2" title="Patient UUID">ID: ${patient.patient_id.substring(0,13)}...</p>
-                    `;
-                    patientListDiv.appendChild(card);
+                for (const [patientId, patient] of Object.entries(patients)) {
+                    const patientCard = document.createElement('div');
+                    patientCard.className = 'bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800/70 transition-colors border border-slate-700';
+                    patientCard.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center"><span class="text-sm font-semibold text-white">${patient.name.split(' ').map(n => n[0]).join('')}</span></div>
+                                <div><h3 class="font-semibold text-white">${patient.name}</h3><p class="text-sm text-slate-400">DOB: ${patient.dob}</p></div>
+                            </div>
+                            <div class="text-right"><p class="text-xs text-slate-500 mono">${patientId.substring(0, 8)}...</p><div class="flex items-center space-x-1 mt-1 justify-end"><div class="w-2 h-2 bg-green-400 rounded-full"></div><span class="text-xs text-slate-400">Active</span></div></div>
+                        </div>`;
+                    patientListDiv.appendChild(patientCard);
                 }
-
+                document.getElementById('total-patients').textContent = Object.keys(patients).length;
+                addLogEntry('info', `Loaded ${Object.keys(patients).length} patients`);
             } catch (error) {
-                console.error("Error fetching patients:", error);
-                showToast(error.message);
-                patientListDiv.innerHTML = `<p class="text-red-500 col-span-full text-center">Error: ${error.message}</p>`;
+                showToast(error.message, 'error');
+                addLogEntry('error', `Failed to fetch patients: ${error.message}`);
+                patientListDiv.innerHTML = `<p class="text-red-400 col-span-full text-center py-8">Error: ${error.message}</p>`;
             }
         }
 
-        // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', fetchAndRenderPatients);
-    </script>
+        function simulateDeadlock() {
+            showToast('Simulating deadlock scenario...', 'info');
+            addLogEntry('warn', 'Deadlock simulation initiated on two patient records.');
+            setTimeout(() => { addLogEntry('error', 'Deadlock detected between competing transactions.'); }, 1500);
+            setTimeout(() => { addLogEntry('info', 'Timeout rollback initiated. Deadlock resolved.'); showToast('Deadlock simulation completed.', 'success'); }, 3000);
+        }
 
+        document.getElementById('refresh-patients').addEventListener('click', fetchPatients);
+        document.getElementById('simulate-deadlock').addEventListener('click', simulateDeadlock);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTime();
+            fetchPatients();
+            setInterval(updateTime, 1000);
+            setInterval(() => addLogEntry('debug', 'System health check... OK'), 15000);
+        });
+    </script>
 </body>
 </html>

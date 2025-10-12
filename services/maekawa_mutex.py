@@ -12,6 +12,7 @@ class MaekawaMutex:
         self.outstanding_replies = set()
         self.deferred_requests = deque()
         self.voted = False
+        self.first_acquire_attempt = True # Flag for one-time delay
 
     def handle_request_rpc(self, requester_id, requester_ts):
         """Processes a lock request from a peer."""

@@ -1,8 +1,8 @@
 @echo off
-title Distributed EHR System Launcher
+title MediSync Pro Launcher
 
 echo =========================================================
-echo ==         Distributed EHR System Launcher             ==
+echo ==            MediSync Pro System Launcher             ==
 echo =========================================================
 echo.
 echo This script will:
