@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # This is the new service for the frontend
+  frontend:
+    image: nginx:alpine
+    container_name: frontend
+    ports:
+      - "8080:80"  # Expose the frontend on host port 8080
+    volumes:
+      - ./nginx/html:/usr/share/nginx/html # Mounts your HTML files
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf # Mounts the config file
+    networks:
+      - ehr-net
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ehr-net
+
+  api-gateway:
+    build: ./services
+    container_name: api-gateway
+    command: python api_gateway.py
+    ports:
+      - "5000:5000"
+    networks:
+      - ehr-net
+    depends_on:
+      - app-node-1
+      - app-node-2
+      - app-node-3
+
+  app-node-1:
+    build: ./services
+    container_name: app-node-1
+    command: python app_node.py 6001
+    ports:
+      - "6001:6001"
+    networks:
+      - ehr-net
+    depends_on:
+      - redis
+      - data-node-1
+      - data-node-2
+      - data-node-3
+
+  app-node-2:
+    build: ./services
+    container_name: app-node-2
+    command: python app_node.py 6002
+    ports:
+      - "6002:6002"
+    networks:
+      - ehr-net
+    depends_on:
+      - redis
+      - data-node-1
+      - data-node-2
+      - data-node-3
+
+  app-node-3:
+    build: ./services
+    container_name: app-node-3
+    command: python app_node.py 6003
+    ports:
+      - "6003:6003"
+    networks:
+      - ehr-net
+    depends_on:
+      - redis
+      - data-node-1
+      - data-node-2
+      - data-node-3
+
+  data-node-1:
+    build: ./services
+    container_name: data-node-1
+    command: python data_node.py 7001 data_node_1.db
+    volumes:
+      - ./data/node1:/data
+    ports:
+      - "7001:7001"
+      - "8001:8001" # Port for Berkeley Clock
+      - "9001:9001" # Port for Maekawa Mutex
+    networks:
+      - ehr-net
+
+  data-node-2:
+    build: ./services
+    container_name: data-node-2
+    command: python data_node.py 7002 data_node_2.db
+    volumes:
+      - ./data/node2:/data
+    ports:
+      - "7002:7002"
+      - "8002:8002"
+      - "9002:9002"
+    networks:
+      - ehr-net
+
+  data-node-3:
+    build: ./services
+    container_name: data-node-3
+    command: python data_node.py 7003 data_node_3.db
+    volumes:
+      - ./data/node3:/data
+    ports:
+      - "7003:7003"
+      - "8003:8003"
+      - "9003:9003"
+    networks:
+      - ehr-net
+
+networks:
+  ehr-net:
+    driver: bridge
