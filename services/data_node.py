@@ -7,73 +7,77 @@ import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer
 from concurrent.futures import ThreadPoolExecutor
 from statistics import mean
+import redis
 import json
 
 from berkeley_clock import BerkeleyClock
 from maekawa_mutex import MaekawaMutex
 
+# --- Configuration & Globals (no changes) ---
 NODE_ID, NODE_PORT, DB_NAME_GLOBAL = 0, 0, ""
-ALL_DATA_NODES = {
-    1: {'host': 'data-node-1', 'rpc': 7001}, 2: {'host': 'data-node-2', 'rpc': 7002}, 3: {'host': 'data-node-3', 'rpc': 7003}
-}
+ALL_DATA_NODES = { 1: {'host': 'data-node-1', 'rpc': 7001}, 2: {'host': 'data-node-2', 'rpc': 7002}, 3: {'host': 'data-node-3', 'rpc': 7003} }
 QUORUM_SETS = {1: [2, 3], 2: [1, 3], 3: [1, 2]}
 QUORUM_W, QUORUM_R = 2, 2
-clock_service, mutex_service, rpc_proxies = None, None, {}
-redis_client = None
+clock_service, mutex_service, rpc_proxies, redis_client = None, None, {}, None
 
+# --- Utility Functions (with logging) ---
 def publish_log(level, message):
     if redis_client:
         log_entry = {'level': level, 'service': f'DataNode-{NODE_ID}', 'message': message}
         redis_client.publish('system_logs', json.dumps(log_entry))
 
 def init_db(db_name):
-    conn = sqlite3.connect(f"/data/{db_name}", check_same_thread=False)
-    cursor = conn.cursor()
+    conn = sqlite3.connect(f"/data/{db_name}", check_same_thread=False); cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS appointments"); cursor.execute("DROP TABLE IF EXISTS records"); cursor.execute("DROP TABLE IF EXISTS users")
     cursor.execute('CREATE TABLE users (uuid TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL, first_name TEXT NOT NULL, last_name TEXT NOT NULL, age INTEGER, role TEXT NOT NULL, specialization TEXT)')
     cursor.execute('CREATE TABLE records (record_id TEXT PRIMARY KEY, patient_uuid TEXT NOT NULL, doctor_name TEXT, description TEXT, prescription TEXT, resources_used TEXT, timestamp REAL, FOREIGN KEY (patient_uuid) REFERENCES users (uuid))')
     cursor.execute('CREATE TABLE appointments (appointment_id TEXT PRIMARY KEY, patient_uuid TEXT NOT NULL, doctor_uuid TEXT NOT NULL, appointment_date TEXT NOT NULL, status TEXT NOT NULL, FOREIGN KEY (patient_uuid) REFERENCES users (uuid), FOREIGN KEY (doctor_uuid) REFERENCES users (uuid))')
     conn.commit(); conn.close()
-    print(f"Database '/data/{db_name}' initialized with new schema.")
+    publish_log('info', f"Database '{db_name}' initialized.")
 
 def connect_to_peers():
     for peer_id, peer_info in ALL_DATA_NODES.items():
         if peer_id != NODE_ID:
             proxy_url = f"http://{peer_info['host']}:{peer_info['rpc']}/"
             rpc_proxies[peer_id] = xmlrpc.client.ServerProxy(proxy_url, allow_none=True)
-    print(f"[Node-{NODE_ID}] Connected to peers: {list(rpc_proxies.keys())}")
+    publish_log('info', f"Connected to peers: {list(rpc_proxies.keys())}")
 
 def send_rpc_to_peer(peer_id, action, data):
     try:
         if peer_id in rpc_proxies: return rpc_proxies[peer_id].dispatch_rpc(action, data)
-    except Exception as e: print(f"[ERROR] Node-{NODE_ID}: Could not call '{action}' on peer {peer_id}: {e}")
+    except Exception as e: publish_log('error', f"Could not call '{action}' on peer {peer_id}: {e}")
     return None
 
 def perform_quorum_write(cursor, record_type, record_data):
     handle_replicate_write(cursor, {"record_type": record_type, "record_data": record_data})
     peer_ids, ack_count = [i for i in ALL_DATA_NODES if i != NODE_ID], 1
     def replicate(peer_id):
+        publish_log('debug', f"Replicating '{record_type}' write to peer {peer_id}")
         response = send_rpc_to_peer(peer_id, "replicate_write", {"record_type": record_type, "record_data": record_data})
         if response and response.get("status") == "success": return True
         return False
     with ThreadPoolExecutor(max_workers=len(peer_ids)) as executor:
         results = executor.map(replicate, peer_ids)
         ack_count += sum(1 for r in results if r)
+    publish_log('info', f"Quorum write completed with {ack_count}/{len(ALL_DATA_NODES)} ACKs.")
     return ack_count >= QUORUM_W, ack_count
 
+# --- Mutual Exclusion Logic (with detailed logging) ---
 def acquire_lock():
     if mutex_service.first_acquire_attempt:
         with mutex_service.lock:
             if mutex_service.first_acquire_attempt:
                 publish_log('debug', "First lock acquire, waiting for network..."); time.sleep(8); mutex_service.first_acquire_attempt = False
-    publish_log('info', "Attempting to ACQUIRE distributed lock...")
+    publish_log('info', "Attempting to ACQUIRE distributed lock (Maekawa)...")
     mutex_service.state, mutex_service.request_ts = 'WANTED', time.time()
     mutex_service.outstanding_replies = set(mutex_service.quorum_ids)
     request_data = {'requester_id': NODE_ID, 'ts': mutex_service.request_ts}
     def send_request(peer_id):
         publish_log('debug', f"Sending lock REQUEST to peer {peer_id}")
         response = send_rpc_to_peer(peer_id, "request_lock", request_data)
-        if response and response == 'REPLY': publish_log('debug', f"Received lock REPLY from peer {peer_id}"); mutex_service.receive_reply(peer_id)
+        if response and response == 'REPLY':
+            publish_log('debug', f"Received lock REPLY from peer {peer_id}")
+            mutex_service.receive_reply(peer_id)
     with ThreadPoolExecutor() as executor: executor.map(send_request, mutex_service.quorum_ids)
     while mutex_service.state != 'HELD': time.sleep(0.1)
     publish_log('info', "Lock ACQUIRED!")
@@ -82,10 +86,11 @@ def release_lock():
     publish_log('info', "RELEASING distributed lock...")
     mutex_service.state, mutex_service.request_ts = 'RELEASED', None
     def send_release(peer_id):
+        publish_log('debug', f"Sending lock RELEASE to peer {peer_id}")
         send_rpc_to_peer(peer_id, "release_lock", {})
     with ThreadPoolExecutor() as executor: executor.map(send_release, mutex_service.quorum_ids)
 
-# --- Action Handlers ---
+# --- All Action Handlers remain the same ---
 def handle_register_patient(cursor, data):
     acquire_lock()
     try:
@@ -107,7 +112,7 @@ def handle_register_doctor(cursor, data):
     finally: release_lock()
 
 def handle_login(cursor, data):
-    acquire_lock()  # <-- ADDED LOCK FOR STRONG CONSISTENCY
+    acquire_lock()
     try:
         cursor.execute("SELECT * FROM users WHERE username = ?", (data.get('username'),))
         user_row = cursor.fetchone()
@@ -116,20 +121,12 @@ def handle_login(cursor, data):
         user_data = dict(zip(user_columns, user_row))
         if user_data.get('password') != data.get('password'): return {"status": "error", "code": 401, "error": "Authentication failed"}
         del user_data['password']
-        
-        # Fetch associated records for patients upon login
         if user_data['role'] == 'patient':
             cursor.execute("SELECT * FROM records WHERE patient_uuid = ? ORDER BY timestamp DESC", (user_data['uuid'],))
             record_rows = cursor.fetchall()
-            if record_rows:
-                record_columns = [desc[0] for desc in cursor.description]
-                user_data['records'] = [dict(zip(record_columns, row)) for row in record_rows]
-            else:
-                user_data['records'] = []
-        
+            user_data['records'] = [dict(zip([d[0] for d in cursor.description], r)) for r in record_rows] if record_rows else []
         return {"status": "success", "code": 200, "data": user_data}
-    finally:
-        release_lock() # <-- ADDED LOCK RELEASE
+    finally: release_lock()
 
 def handle_add_record(cursor, data):
     acquire_lock()
@@ -197,14 +194,22 @@ def dispatch_rpc(action, data):
         elif action == "replicate_write": response = handle_replicate_write(cursor, data)
         elif action == "get_time_for_sync": return clock_service.get_time_for_sync()
         elif action == "adjust_time": clock_service.adjust_time(data['adjustment']); return "OK"
-        elif action == "request_lock": return mutex_service.handle_request_rpc(data['requester_id'], data['ts'])
-        elif action == "release_lock": return mutex_service.handle_release_rpc()
-        elif action == "receive_grant": mutex_service.receive_reply(data['sender_id']); return "OK"
+        elif action == "request_lock":
+            publish_log('debug', f"Received lock REQUEST from peer {data['requester_id']}")
+            response = mutex_service.handle_request_rpc(data['requester_id'], data['ts'])
+            publish_log('debug', f"Sending lock {response} to peer {data['requester_id']}")
+            return response
+        elif action == "release_lock":
+            publish_log('debug', "Received lock RELEASE from a peer.")
+            return mutex_service.handle_release_rpc()
+        elif action == "receive_grant":
+            publish_log('debug', f"Received a delegated GRANT from peer {data['sender_id']}")
+            mutex_service.receive_reply(data['sender_id']); return "OK"
         elif action == "ping": return {"status": "success"}
         else: response = {"status": "error", "error": "Unknown action"}
         conn.commit()
     except Exception as e:
-        conn.rollback(); response = {"status": "error", "error": f"An internal error occurred: {e}"}; print(f"[ERROR] on '{action}': {e}")
+        conn.rollback(); response = {"status": "error", "error": f"Internal error: {e}"}; print(f"[ERROR] on '{action}': {e}")
     finally: conn.close()
     return response
 
@@ -221,6 +226,7 @@ def master_sync_loop():
                 except Exception as e: publish_log('warn', f"Clock Master: FAILED to get time from Peer {peer_id}")
             if offsets:
                 offsets.append(0.0); average_offset = mean(offsets)
+                publish_log('info', f"Clock sync round complete. Average offset: {average_offset:.4f}s")
                 for peer_id, proxy in rpc_proxies.items():
                     if peer_id in peer_offsets: send_rpc_to_peer(peer_id, "adjust_time", {'adjustment': average_offset - peer_offsets[peer_id]})
                 clock_service.adjust_time(average_offset)
@@ -228,10 +234,18 @@ def master_sync_loop():
         time.sleep(20)
 
 def main(port, db_name):
-    global NODE_PORT, NODE_ID, DB_NAME_GLOBAL, clock_service, mutex_service
+    global NODE_PORT, NODE_ID, DB_NAME_GLOBAL, clock_service, mutex_service, redis_client
     NODE_PORT, DB_NAME_GLOBAL = port, db_name
     for i, p in ALL_DATA_NODES.items():
         if p['rpc'] == NODE_PORT: NODE_ID = i; break
+    
+    try:
+        redis_client = redis.Redis(host='redis', port=6379, db=0)
+        redis_client.ping()
+        print(f"[DataNode-{NODE_ID}] Connected to Redis for logging.")
+    except Exception as e:
+        print(f"[DataNode-{NODE_ID}] ERROR: Could not connect to Redis: {e}")
+
     init_db(db_name)
     is_master_clock = (NODE_ID == 1)
     clock_service, mutex_service = BerkeleyClock(NODE_ID, is_master=is_master_clock), MaekawaMutex(NODE_ID, QUORUM_SETS[NODE_ID])
@@ -242,12 +256,6 @@ def main(port, db_name):
         server.register_introspection_functions(); server.register_function(dispatch_rpc, 'dispatch_rpc')
         print(f"Data Node {NODE_ID} RPC server listening on {port}")
         server.serve_forever()
-    try:
-        redis_client = redis.Redis(host='redis', port=6379, db=0)
-        redis_client.ping()
-        print(f"[DataNode-{NODE_ID}] Connected to Redis for logging.")
-    except Exception as e:
-        print(f"[DataNode-{NODE_ID}] ERROR: Could not connect to Redis: {e}")
 
 if __name__ == '__main__':
     if len(sys.argv) != 3: print("Usage: python data_node.py <port> <db_name>"); sys.exit(1)
