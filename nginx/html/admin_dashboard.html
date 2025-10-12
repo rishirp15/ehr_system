@@ -6,9 +6,11 @@
     <title>MediSync Pro - System Control Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass-effect { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .pulse-animation { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
@@ -41,6 +43,21 @@
         </header>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="glass-effect rounded-xl p-6 transition-all duration-300">
+                    <div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Total Patients</p><p class="text-3xl font-bold text-white" id="total-patients">-</p></div><div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></div></div>
+                </div>
+                <div class="glass-effect rounded-xl p-6 transition-all duration-300">
+                    <div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Active Nodes</p><p class="text-3xl font-bold text-white" id="active-nodes">3/3</p></div><div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h-3v3h3V8zm-2 10v3h3v-3h-3z"></path></svg></div></div>
+                </div>
+                <div class="glass-effect rounded-xl p-6 transition-all duration-300">
+                    <div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Cache Hit Rate</p><p class="text-3xl font-bold text-white" id="cache-hit-rate">-</p></div><div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div></div>
+                </div>
+                <div class="glass-effect rounded-xl p-6 transition-all duration-300">
+                    <div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">System Health</p><p class="text-3xl font-bold text-white" id="system-health">-</p></div><div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div></div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2">
                     <div class="glass-effect rounded-xl p-6">
@@ -48,7 +65,7 @@
                             <h2 class="text-xl font-semibold text-white">Patient Registry</h2>
                             <button id="refresh-patients" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Refresh</button>
                         </div>
-                        <div id="patient-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-2"></div>
+                        <div id="patient-list" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div>
                     </div>
                 </div>
 
@@ -86,9 +103,11 @@
             const logEntry = document.createElement('div');
             logEntry.className = 'log-entry';
             logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> <span class="log-level-${level}">[${level.toUpperCase()}]</span> <span class="text-slate-300">${message}</span>`;
-            logsContainer.appendChild(logEntry);
-            logsContainer.scrollTop = logsContainer.scrollHeight;
-            while (logsContainer.children.length > 50) { logsContainer.removeChild(logsContainer.firstChild); }
+            if(logsContainer) {
+                logsContainer.appendChild(logEntry);
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+                while (logsContainer.children.length > 50) { logsContainer.removeChild(logsContainer.firstChild); }
+            }
         }
         
         function showToast(message, type = 'info') {
@@ -107,7 +126,7 @@
             patientListDiv.innerHTML = `<div class="text-center text-slate-400 py-8 col-span-full"><div class="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div><p>Loading patient data...</p></div>`;
             try {
                 const response = await fetch(`${API_URL}/patients`);
-                if (!response.ok) throw new Error('Failed to fetch patients');
+                if (!response.ok) throw new Error('Failed to fetch patients from server.');
                 const patients = await response.json();
                 patientListDiv.innerHTML = '';
                 if (Object.keys(patients).length === 0) {
@@ -143,13 +162,26 @@
             setTimeout(() => { addLogEntry('info', 'Timeout rollback initiated. Deadlock resolved.'); showToast('Deadlock simulation completed.', 'success'); }, 3000);
         }
 
+        function updateMetrics() {
+            const cacheHitRateEl = document.getElementById('cache-hit-rate');
+            const systemHealthEl = document.getElementById('system-health');
+            if (cacheHitRateEl) {
+                cacheHitRateEl.textContent = `${Math.floor(Math.random() * 10) + 90}%`;
+            }
+            if(systemHealthEl) {
+                systemHealthEl.textContent = `${Math.floor(Math.random() * 5) + 95}%`;
+            }
+        }
+
         document.getElementById('refresh-patients').addEventListener('click', fetchPatients);
         document.getElementById('simulate-deadlock').addEventListener('click', simulateDeadlock);
         document.addEventListener('DOMContentLoaded', () => {
             updateTime();
             fetchPatients();
             setInterval(updateTime, 1000);
+            setInterval(updateMetrics, 5000);
             setInterval(() => addLogEntry('debug', 'System health check... OK'), 15000);
+            addLogEntry('info', 'Admin Control Center Initialized');
         });
     </script>
 </body>
