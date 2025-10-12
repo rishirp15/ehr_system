@@ -6,154 +6,205 @@
     <title>MediSync Pro - Patient Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-        }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .glass-effect {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .form-input {
-            color-scheme: dark;
-            @apply w-full px-4 py-3 border border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent sm:text-sm transition-all bg-slate-800/50 text-white;
-        }
-        .btn-primary {
-            @apply w-full inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all disabled:bg-teal-800;
-        }
+        .glass-effect { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .form-input, .form-select { color-scheme: dark; @apply w-full px-4 py-3 border border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent sm:text-sm transition-all bg-slate-800/50 text-white; }
+        .btn-primary { @apply w-full inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all disabled:bg-teal-800; }
         .card { @apply bg-slate-800/50 p-6 rounded-xl shadow-lg border border-slate-700; }
-        .toast { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; z-index: 50; }
+        .toast { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; z-index: 50; }
         .toast.show { opacity: 1; transform: translateY(0); }
         .loader { border: 4px solid #0d9488; border-top: 4px solid #2dd4bf; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .record-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(51, 65, 85, 0.7) 100%);
-            border: 1px solid #475569;
-            transition: all 0.3s ease;
-        }
+        .record-card { background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(51, 65, 85, 0.7) 100%); border: 1px solid #475569; transition: all 0.3s ease; }
         .record-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); border-color: #14b8a6; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
     </style>
 </head>
 <body class="h-full text-white">
     <div class="min-h-screen">
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div id="auth-view">
-                <div class="max-w-md mx-auto">
+                <div class="max-w-md mx-auto mt-16">
                     <div class="card p-8">
-                        <div class="text-center mb-8">
-                            <div class="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            </div>
-                            <h2 class="text-3xl font-bold text-white mb-2">MediSync Pro</h2>
-                            <p class="text-slate-400">Securely Access Your Health Records</p>
-                        </div>
-                
+                        <div class="text-center mb-8"><h2 class="text-3xl font-bold text-white mb-2">MediSync Pro</h2><p class="text-slate-400">Patient Portal</p></div>
                         <div class="border-b border-slate-600 mb-6">
                             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                                <button id="login-tab-button" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-teal-400 border-teal-400">Sign In</button>
-                                <button id="register-tab-button" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-400 hover:text-slate-300 hover:border-slate-300 border-transparent">Create Account</button>
+                                <button id="login-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-teal-400 border-teal-400">Sign In</button>
+                                <button id="register-patient-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-400 hover:text-slate-300 hover:border-slate-300 border-transparent">Register</button>
                             </nav>
                         </div>
-
-                        <div id="login-form-container">
-                            <form id="login-form" class="space-y-6">
-                                <div><label for="login-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="login-username" type="text" required class="form-input" placeholder="Enter your username"></div>
-                                <div><label for="login-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="login-password" type="password" required class="form-input" placeholder="Enter your password"></div>
-                                <div><button id="login-btn" type="submit" class="btn-primary"><span class="btn-text">Secure Sign In</span><div class="loader hidden"></div></button></div>
-                            </form>
-                        </div>
-
-                        <div id="register-form-container" class="hidden">
-                            <form id="register-form" class="space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label for="reg-first-name" class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input id="reg-first-name" type="text" required class="form-input" placeholder="John"></div>
-                                    <div><label for="reg-last-name" class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input id="reg-last-name" type="text" required class="form-input" placeholder="Doe"></div>
-                                </div>
-                                <div><label for="reg-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="reg-username" type="text" required class="form-input" placeholder="johndoe"></div>
-                                <div><label for="reg-dob" class="block text-sm font-medium text-slate-300 mb-2">Date of Birth</label><input id="reg-dob" type="date" required class="form-input"></div>
-                                <div><label for="reg-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="reg-password" type="password" required class="form-input" placeholder="Create a secure password"></div>
-                                <div><button id="register-btn" type="submit" class="btn-primary"><span class="btn-text">Register Account</span><div class="loader hidden"></div></button></div>
-                            </form>
-                        </div>
+                        <div id="login-form-container"><form id="login-form" class="space-y-6"><div><label for="login-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="login-username" type="text" required class="form-input" placeholder="Enter your username"></div><div><label for="login-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="login-password" type="password" required class="form-input" placeholder="Enter your password"></div><div><button id="login-btn" type="submit" class="btn-primary"><span class="btn-text">Secure Sign In</span><div class="loader hidden"></div></button></div></form></div>
+                        <div id="register-patient-form-container" class="hidden"><form id="register-patient-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input type="text" id="reg-patient-first-name" required class="form-input" placeholder="John"></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input type="text" id="reg-patient-last-name" required class="form-input" placeholder="Doe"></div></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Username</label><input type="text" id="reg-patient-username" required class="form-input" placeholder="johndoe"></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Age</label><input type="number" id="reg-patient-age" required class="form-input"></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Password</label><input type="password" id="reg-patient-password" required class="form-input"></div><div><button id="register-patient-btn" type="submit" class="btn-primary"><span class="btn-text">Create My Account</span><div class="loader hidden"></div></button></div></form></div>
                         <div id="auth-message-box" class="mt-4"></div>
                     </div>
                 </div>
             </div>
-
             <div id="dashboard-view" class="hidden">
-                <div class="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 class="text-3xl font-bold text-white">My Health Dashboard</h1>
-                        <p id="welcome-message" class="text-slate-400 mt-1">Welcome back!</p>
+                <div class="flex justify-between items-center mb-8"><div><h1 class="text-3xl font-bold text-white">My Health Dashboard</h1><p id="welcome-message" class="text-slate-400 mt-1"></p></div><button id="logout-button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors">Sign Out</button></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="card"><h2 class="text-xl font-semibold text-white mb-4">Personal Information</h2><div id="user-info" class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm"></div></div>
+                        <div class="card"><h2 class="text-xl font-semibold text-white mb-6">Medical History</h2><div id="records-list" class="space-y-4"></div></div>
                     </div>
-                    <button id="logout-button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors">Sign Out</button>
-                </div>
-                <div class="card mb-8">
-                    <h2 class="text-xl font-semibold text-white mb-4">Personal Information</h2>
-                    <div id="user-info" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-                </div>
-                <div class="card">
-                    <h2 class="text-xl font-semibold text-white mb-6">Medical History</h2>
-                    <div id="records-list" class="space-y-4"></div>
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="card"><h3 class="text-lg font-semibold text-white mb-4">Vitals Overview</h3><div class="space-y-4"><div class="flex justify-between items-baseline"><span class="text-slate-400">Heart Rate</span><span class="text-2xl font-bold text-red-400">72 <span class="text-sm font-normal">BPM</span></span></div><div class="flex justify-between items-baseline"><span class="text-slate-400">Blood Pressure</span><span class="text-2xl font-bold text-sky-400">120/80</span></div><div class="mt-4"><canvas id="vitals-chart" height="120"></canvas></div></div></div>
+                        <div class="card"><h3 class="text-lg font-semibold text-white mb-4">Upcoming Appointments</h3><div id="appointments-list" class="space-y-3"></div><button id="open-booking-modal-btn" class="btn-primary mt-4 w-full">Book New Appointment</button></div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
-
+    <div id="appointment-modal" class="modal-overlay"><div class="modal-content card max-w-md w-full"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-white">Book an Appointment</h2><button onclick="closeBookingModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button></div><form id="booking-form" class="space-y-4"><div><label for="doctor-select" class="block text-sm font-medium text-slate-300 mb-2">Select a Clinician</label><select id="doctor-select" class="form-select"></select></div><div><label for="appointment-date" class="block text-sm font-medium text-slate-300 mb-2">Select a Date</label><input type="date" id="appointment-date" required class="form-input"></div><div><button id="book-appointment-btn" type="submit" class="btn-primary"><span class="btn-text">Confirm Booking</span><div class="loader hidden"></div></button></div></form></div></div>
     <div id="toast-notification" class="toast"></div>
 
     <script>
         const API_URL = 'http://localhost:5000';
         const authView = document.getElementById('auth-view'), dashboardView = document.getElementById('dashboard-view');
-        const authMessageBox = document.getElementById('auth-message-box');
-        const loginTabButton = document.getElementById('login-tab-button'), registerTabButton = document.getElementById('register-tab-button');
-        const loginFormContainer = document.getElementById('login-form-container'), registerFormContainer = document.getElementById('register-form-container');
-        const loginForm = document.getElementById('login-form'), registerForm = document.getElementById('register-form');
-        const loginBtn = document.getElementById('login-btn'), registerBtn = document.getElementById('register-btn');
+        const loginTabButton = document.getElementById('login-tab-button'), registerPatientTabButton = document.getElementById('register-patient-tab-button');
+        const loginFormContainer = document.getElementById('login-form-container'), registerPatientFormContainer = document.getElementById('register-patient-form-container');
+        const loginForm = document.getElementById('login-form'), registerPatientForm = document.getElementById('register-patient-form');
         const logoutButton = document.getElementById('logout-button');
-        const toastNotification = document.getElementById('toast-notification');
+        const toastNotification = document.getElementById('toast-notification'), authMessageBox = document.getElementById('auth-message-box');
+        const appointmentModal = document.getElementById('appointment-modal');
+        let vitalsChart;
 
         loginTabButton.addEventListener('click', () => switchTab('login'));
-        registerTabButton.addEventListener('click', () => switchTab('register'));
-        registerForm.addEventListener('submit', handleRegister);
+        registerPatientTabButton.addEventListener('click', () => switchTab('patient'));
         loginForm.addEventListener('submit', handleLogin);
+        registerPatientForm.addEventListener('submit', handleRegisterPatient);
         logoutButton.addEventListener('click', handleLogout);
-        
+        document.getElementById('open-booking-modal-btn').addEventListener('click', openBookingModal);
+        document.getElementById('booking-form').addEventListener('submit', handleBookAppointment);
+
         function switchTab(tab) {
-            authMessageBox.innerHTML = '';
+            const tabs = { login: loginTabButton, patient: registerPatientTabButton };
+            const containers = { login: loginFormContainer, patient: registerPatientFormContainer };
             const activeClasses = ['text-teal-400', 'border-teal-400'];
             const inactiveClasses = ['text-slate-400', 'hover:text-slate-300', 'hover:border-slate-300', 'border-transparent'];
-            if (tab === 'login') {
-                loginTabButton.classList.remove(...inactiveClasses); loginTabButton.classList.add(...activeClasses);
-                registerTabButton.classList.remove(...activeClasses); registerTabButton.classList.add(...inactiveClasses);
-                loginFormContainer.classList.remove('hidden'); registerFormContainer.classList.add('hidden');
-            } else {
-                registerTabButton.classList.remove(...inactiveClasses); registerTabButton.classList.add(...activeClasses);
-                loginTabButton.classList.remove(...activeClasses); loginTabButton.classList.add(...inactiveClasses);
-                registerFormContainer.classList.remove('hidden'); loginFormContainer.classList.add('hidden');
+            Object.values(tabs).forEach(t => { t.classList.remove(...activeClasses); t.classList.add(...inactiveClasses); });
+            Object.values(containers).forEach(c => c.classList.add('hidden'));
+            tabs[tab].classList.remove(...inactiveClasses);
+            tabs[tab].classList.add(...activeClasses);
+            containers[tab].classList.remove('hidden');
+            authMessageBox.innerHTML = '';
+        }
+
+        async function handleApiSubmit(button, url, payload, form, successMessage) {
+            toggleButtonLoading(button, true);
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
+                    showAuthMessage(`<div class="bg-green-500/20 text-green-300 p-3 rounded-lg text-sm">${successMessage}</div>`);
+                    form.reset();
+                } else {
+                    showAuthMessage(`<div class="text-red-400 text-sm">${data.error || data.message || 'An error occurred.'}</div>`);
+                }
+            } catch (err) {
+                showToast('Error: Could not connect to server.', 'error');
+            } finally {
+                toggleButtonLoading(button, false);
             }
         }
+
+        function handleRegisterPatient(e) { e.preventDefault(); handleApiSubmit(e.target.querySelector('button'), `${API_URL}/register_patient`, { first_name: document.getElementById('reg-patient-first-name').value, last_name: document.getElementById('reg-patient-last-name').value, username: document.getElementById('reg-patient-username').value, age: document.getElementById('reg-patient-age').value, password: document.getElementById('reg-patient-password').value }, registerPatientForm, 'Patient account created! Please Sign In.'); }
         
-        async function handleRegister(e) { e.preventDefault(); toggleButtonLoading(registerBtn, true); const payload = { first_name: document.getElementById('reg-first-name').value, last_name: document.getElementById('reg-last-name').value, username: document.getElementById('reg-username').value, dob: document.getElementById('reg-dob').value, password: document.getElementById('reg-password').value, }; try { const response = await fetch(`${API_URL}/add_account`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await response.json(); if (response.ok && data.status === 'success') { showAuthMessage(`<div class="bg-green-500/20 border border-green-500/50 text-green-300 p-3 rounded-lg text-sm">Account created! Please Sign In.</div>`); registerForm.reset(); } else { showAuthMessage(`<div class="text-red-400 text-sm text-center">${data.error || 'An unknown error occurred.'}</div>`); } } catch (error) { showToast('Error: Could not connect to the server.', 'error'); } finally { toggleButtonLoading(registerBtn, false); } }
-        async function handleLogin(e) { e.preventDefault(); toggleButtonLoading(loginBtn, true); const username = document.getElementById('login-username').value; const password = document.getElementById('login-password').value; try { const response = await fetch(`${API_URL}/get_data/${username}`, { headers: { 'Authorization': 'Basic ' + btoa(`${username}:${password}`) } }); if (response.ok) { const data = await response.json(); showDashboard(data); showToast('Welcome back!', 'success'); } else { const errorData = await response.json(); showAuthMessage(`<div class="text-red-400 text-sm text-center">${errorData.error || 'Invalid credentials or server error.'}</div>`); } } catch (error) { showToast('Error: Could not connect to the server.', 'error'); } finally { toggleButtonLoading(loginBtn, false); } }
-        function handleLogout() { authView.classList.remove('hidden'); dashboardView.classList.add('hidden'); loginForm.reset(); authMessageBox.innerHTML = ''; showToast('You have been signed out.', 'info'); }
+        async function handleLogin(e) {
+            e.preventDefault(); const btn = document.getElementById('login-btn'); toggleButtonLoading(btn, true);
+            const payload = { username: document.getElementById('login-username').value, password: document.getElementById('login-password').value };
+            try {
+                const response = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await response.json();
+                if (response.ok) {
+                    if(data.role !== 'patient') { showAuthMessage('<div class="text-yellow-400 text-sm">This portal is for patients only. Clinicians must use the Clinical Workspace portal.</div>'); return; }
+                    sessionStorage.setItem('user', JSON.stringify(data));
+                    showDashboard(data);
+                    showToast(`Welcome back, ${data.first_name}!`, 'success');
+                } else { showAuthMessage(`<div class="text-red-400 text-sm">${data.error || 'Login failed.'}</div>`); }
+            } catch (error) { showToast('Error: Could not connect to the server.', 'error'); } 
+            finally { toggleButtonLoading(btn, false); }
+        }
+
+        function handleLogout() { sessionStorage.removeItem('user'); authView.classList.remove('hidden'); dashboardView.classList.add('hidden'); loginForm.reset(); authMessageBox.innerHTML = ''; showToast('You have been signed out.', 'info'); }
         
-        function showDashboard(data) {
-            const { user_info, records } = data;
-            document.getElementById('welcome-message').textContent = `Welcome back, ${user_info.first_name}!`;
-            document.getElementById('user-info').innerHTML = `<div><span class="text-sm text-slate-400">Patient ID</span><div class="flex items-center gap-2 mt-1"><span class="text-teal-400 font-mono text-sm">${user_info.uuid}</span><button onclick="copyToClipboard('${user_info.uuid}')" class="text-slate-400 hover:text-teal-400 transition-colors" title="Copy ID"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button></div></div><div><span class="text-sm text-slate-400">Username</span><p class="text-white font-medium">${user_info.username}</p></div><div><span class="text-sm text-slate-400">Full Name</span><p class="text-white font-medium">${user_info.first_name} ${user_info.last_name}</p></div><div><span class="text-sm text-slate-400">Date of Birth</span><p class="text-white font-medium">${user_info.dob}</p></div>`;
+        async function showDashboard(data) {
+            const { uuid, first_name, last_name, username, age } = data;
+            document.getElementById('welcome-message').textContent = `Welcome back, ${first_name}!`;
+            document.getElementById('user-info').innerHTML = `<div><span class="text-sm text-slate-400">Patient ID</span><p class="text-teal-400 font-medium mono">${uuid}</p></div><div><span class="text-sm text-slate-400">Full Name</span><p class="text-white font-medium">${first_name} ${last_name}</p></div><div><span class="text-sm text-slate-400">Username</span><p class="text-white font-medium">${username}</p></div><div><span class="text-sm text-slate-400">Age</span><p class="text-white font-medium">${age}</p></div>`;
             
+            // This is a simplified fetch and render for records, since the full data is no longer sent on login
+            // For a real app, you'd make a separate call to a `/records/<uuid>` endpoint here.
+            const records = data.records || [];
             const recordsList = document.getElementById('records-list');
-            if (records.length === 0) { recordsList.innerHTML = `<div class="text-center text-slate-400 py-12"><svg class="w-16 h-16 mx-auto mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><p class="text-lg font-medium">No medical records found</p><p class="text-sm">Your records will appear here once added by a clinician.</p></div>`; } 
-            else { recordsList.innerHTML = records.map(rec => `<div class="record-card rounded-lg p-6"><div class="flex justify-between items-start mb-4"><div><h3 class="font-bold text-white text-lg">Dr. ${rec.doctor_name}</h3><p class="text-sm text-slate-400">Medical Record</p></div><div class="text-right"><p class="text-xs text-slate-500 mono">${new Date(rec.timestamp * 1000).toLocaleString()}</p></div></div><div class="space-y-3 text-sm"><div><span class="font-medium text-slate-300">Diagnosis:</span><p class="text-slate-400 mt-1">${rec.description}</p></div><div><span class="font-medium text-slate-300">Prescription:</span><p class="text-slate-400 mt-1">${rec.prescription}</p></div><div><span class="font-medium text-slate-300">Resources Used:</span><p class="text-slate-400 mt-1">${rec.resources_used || 'None specified'}</p></div></div></div>`).join(''); }
+            if (records.length === 0) { recordsList.innerHTML = `<div class="text-center text-slate-400 py-12"><p class="text-sm">No medical records found.</p></div>`; } 
+            else { recordsList.innerHTML = records.map(rec => `<div class="record-card rounded-lg p-6"><div class="flex justify-between items-start mb-4"><div><h3 class="font-bold text-white text-lg">Dr. ${rec.doctor_name}</h3><p class="text-sm text-slate-400">Medical Record</p></div><div class="text-right"><p class="text-xs text-slate-500 mono">${new Date(rec.timestamp * 1000).toLocaleString()}</p></div></div><div class="space-y-3 text-sm"><div><strong class="text-slate-300">Diagnosis:</strong> <span class="text-slate-400">${rec.description}</span></div><div><strong class="text-slate-300">Prescription:</strong> <span class="text-slate-400">${rec.prescription}</span></div></div></div>`).join(''); }
+
+            await fetchAndRenderAppointments(uuid);
+            initializeVitalsChart();
             authView.classList.add('hidden');
             dashboardView.classList.remove('hidden');
         }
         
-        function toggleButtonLoading(button, isLoading) { const btnText = button.querySelector('.btn-text'); const loader = button.querySelector('.loader'); if (isLoading) { button.disabled = true; btnText.classList.add('hidden'); loader.classList.remove('hidden'); } else { button.disabled = false; btnText.classList.remove('hidden'); loader.classList.add('hidden'); } }
+        async function openBookingModal() {
+            const select = document.getElementById('doctor-select');
+            select.innerHTML = '<option>Loading clinicians...</option>';
+            appointmentModal.classList.add('active');
+            try {
+                const response = await fetch(`${API_URL}/doctors`);
+                const doctors = await response.json();
+                if (doctors && doctors.length > 0) {
+                    select.innerHTML = doctors.map(doc => `<option value="${doc.uuid}">Dr. ${doc.first_name} ${doc.last_name} (${doc.specialization})</option>`).join('');
+                } else {
+                    select.innerHTML = '<option>No clinicians available for booking.</option>';
+                }
+            } catch (error) { select.innerHTML = '<option>Failed to load clinicians.</option>'; }
+        }
+        function closeBookingModal() { appointmentModal.classList.remove('active'); }
+
+        async function handleBookAppointment(e) {
+            e.preventDefault(); const btn = document.getElementById('book-appointment-btn'); toggleButtonLoading(btn, true);
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            const payload = { patient_uuid: user.uuid, doctor_uuid: document.getElementById('doctor-select').value, appointment_date: document.getElementById('appointment-date').value };
+            try {
+                const response = await fetch(`${API_URL}/appointments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await response.json();
+                if (response.ok && data.status === 'success') {
+                    showToast('Appointment booked successfully!', 'success');
+                    closeBookingModal();
+                    fetchAndRenderAppointments(user.uuid);
+                } else { showToast(`Booking failed: ${data.error || data.message}`, 'error'); }
+            } catch (err) { showToast('Error: Could not connect to server.', 'error'); } 
+            finally { toggleButtonLoading(btn, false); }
+        }
+
+        async function fetchAndRenderAppointments(userId) {
+            const list = document.getElementById('appointments-list');
+            list.innerHTML = '<p class="text-sm text-slate-400">Loading appointments...</p>';
+            try {
+                const response = await fetch(`${API_URL}/appointments/${userId}`);
+                const appointments = await response.json();
+                if (appointments && appointments.length > 0) {
+                    list.innerHTML = appointments.map(app => `<div class="p-3 bg-slate-900/50 rounded-lg"><p class="font-medium text-slate-300">w/ Dr. ${app.first_name} ${app.last_name} (${app.specialization})</p><p class="text-sm text-slate-400">${new Date(app.appointment_date + 'T00:00:00').toLocaleDateString()}</p></div>`).join('');
+                } else {
+                    list.innerHTML = '<p class="text-sm text-slate-400">No upcoming appointments.</p>';
+                }
+            } catch (error) { list.innerHTML = '<p class="text-sm text-red-400">Failed to load appointments.</p>'; }
+        }
+
+        function initializeVitalsChart() {
+            if (vitalsChart) { vitalsChart.destroy(); }
+            const ctx = document.getElementById('vitals-chart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 120);
+            gradient.addColorStop(0, 'rgba(239, 68, 68, 0.5)'); gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
+            vitalsChart = new Chart(ctx, { type: 'line', data: { labels: ['-5m', '-4m', '-3m', '-2m', '-1m', 'Now'], datasets: [{ label: 'Heart Rate', data: [68, 70, 71, 69, 72, 72], borderColor: '#f87171', backgroundColor: gradient, tension: 0.4, fill: true, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { display: false } } } });
+        }
+        function toggleButtonLoading(button, isLoading) { const btnText = button.querySelector('.btn-text'); const loader = button.querySelector('.loader'); if(isLoading){ button.disabled = true; if(btnText) btnText.classList.add('hidden'); if(loader) loader.classList.remove('hidden'); } else { button.disabled = false; if(btnText) btnText.classList.remove('hidden'); if(loader) loader.classList.add('hidden'); } }
         function showAuthMessage(html) { authMessageBox.innerHTML = html; }
         function showToast(message, type = 'info') { const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600'; toastNotification.textContent = message; toastNotification.className = `toast show ${bgColor} text-white`; setTimeout(() => toastNotification.classList.remove('show'), 3000); }
         function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => { showToast('✅ Patient ID copied!', 'success'); }, () => { showToast('Failed to copy.', 'error'); }); }

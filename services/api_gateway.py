@@ -6,15 +6,12 @@ from itertools import cycle
 app = Flask(__name__)
 CORS(app)
 
-# Use 'host.docker.internal' for reliable cross-container communication
-# from a port mapped to the host, especially on Docker Desktop (Windows/Mac).
 APP_NODE_URLS = [
     "http://host.docker.internal:6001",
     "http://host.docker.internal:6002",
     "http://host.docker.internal:6003",
 ]
 
-# Use itertools.cycle for a simple round-robin load balancer
 app_node_cycler = cycle(APP_NODE_URLS)
 
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -32,12 +29,10 @@ def proxy_request(path):
             data=request.get_data(),
             cookies=request.cookies,
             allow_redirects=False,
-            timeout=20 # Generous timeout for distributed operations
+            timeout=20
         )
-
         headers = [(name, value) for (name, value) in response.raw.headers.items()]
         return response.content, response.status_code, headers
-
     except requests.exceptions.RequestException as e:
         print(f"[ERROR] Could not forward request to {url}: {e}")
         return jsonify({"error": "Service temporarily unavailable"}), 503

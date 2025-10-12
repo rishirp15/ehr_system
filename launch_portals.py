@@ -1,15 +1,13 @@
 import webbrowser
 import time
 
-# --- Configuration ---
 PORTALS = {
     "Patient": "http://localhost:8080/patient_portal.html",
     "Doctor": "http://localhost:8080/doctor_portal.html",
     "Admin": "http://localhost:8080/admin_dashboard.html"
 }
-WAIT_SECONDS = 8 # Time to wait for Docker containers to initialize
+WAIT_SECONDS = 10 
 
-# --- Main Script ---
 if __name__ == "__main__":
     print(f"[*] Waiting {WAIT_SECONDS} seconds for the system to initialize...")
     time.sleep(WAIT_SECONDS)
@@ -23,5 +21,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"[ERROR] Could not open {url}. Please open it manually. Error: {e}")
             
-    print("\n[SUCCESS] Startup script finished. Your EHR system is ready.")
-    print("To stop the system, go to the Docker terminal and press Ctrl + C.")
+    print("\n[SUCCESS] Startup script finished. Your MediSync Pro system is ready.")
