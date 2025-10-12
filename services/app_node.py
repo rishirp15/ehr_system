@@ -1,4 +1,5 @@
 import sys
+import sys
 import xmlrpc.client
 from itertools import cycle
 from flask import Flask, request, jsonify
@@ -6,7 +7,6 @@ from flask_cors import CORS
 import redis
 import json
 
-# --- Configuration ---
 DATA_NODES = ['http://data-node-1:7001', 'http://data-node-2:7002', 'http://data-node-3:7003']
 data_node_cycler = cycle(DATA_NODES)
 REDIS_HOST, REDIS_PORT = 'redis', 6379
@@ -16,19 +16,31 @@ app = Flask(__name__)
 CORS(app)
 
 try:
-    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
-    redis_client.ping(); print(f"[*] Successfully connected to Redis at {REDIS_HOST}:{REDIS_PORT}")
-except redis.exceptions.ConnectionError as e:
-    print(f"[ERROR] Could not connect to Redis: {e}. Caching will be disabled."); redis_client = None
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+    redis_client.ping()
+    print(f"[*] AppNode-{sys.argv[1]}: Successfully connected to Redis.")
+except Exception as e:
+    print(f"[ERROR] AppNode-{sys.argv[1]}: Could not connect to Redis: {e}"); redis_client = None
+
+def publish_log(level, message):
+    if redis_client:
+        log_entry = {'level': level, 'service': f'AppNode-{app.port}', 'message': message}
+        redis_client.publish('system_logs', json.dumps(log_entry))
 
 def send_rpc_to_data_node(rpc_message):
     target_node = next(data_node_cycler)
+    action = rpc_message['action']
+    log_msg = f"Sending RPC '{action}' to {target_node.split('/')[-1]}"
+    print(f"[*] AppNode-{app.port}: {log_msg}")
+    publish_log('info', log_msg)
     try:
         with xmlrpc.client.ServerProxy(target_node, allow_none=True) as proxy:
-            return proxy.dispatch_rpc(rpc_message['action'], rpc_message['data'])
+            response = proxy.dispatch_rpc(action, rpc_message['data'])
+            publish_log('debug', f"Received RPC response from {target_node.split('/')[-1]} for '{action}'")
+            return response
     except Exception as e:
         error_msg = f"Data service at {target_node} is unavailable: {e}"
-        print(f"[ERROR] {error_msg}")
+        publish_log('error', error_msg)
         return {"status": "error", "code": 503, "error": error_msg}
 
 # --- API Endpoints ---

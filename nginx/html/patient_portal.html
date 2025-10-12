@@ -11,7 +11,13 @@
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass-effect { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .form-input, .form-select { color-scheme: dark; @apply w-full px-4 py-3 border border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent sm:text-sm transition-all bg-slate-800/50 text-white; }
+        .form-input, .form-select {
+            color-scheme: dark;
+            background: linear-gradient(#1e293b, #1e293b) padding-box,
+                        linear-gradient(to right, #0d9488, #2dd4bf) border-box;
+            border: 2px solid transparent;
+            @apply w-full px-4 py-3 rounded-lg shadow-sm placeholder-slate-500 focus:outline-none sm:text-sm transition-all text-white;
+        }
         .btn-primary { @apply w-full inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all disabled:bg-teal-800; }
         .card { @apply bg-slate-800/50 p-6 rounded-xl shadow-lg border border-slate-700; }
         .toast { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; z-index: 50; }
@@ -39,12 +45,28 @@
                                 <button id="register-patient-tab-button" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-400 hover:text-slate-300 hover:border-slate-300 border-transparent">Register</button>
                             </nav>
                         </div>
-                        <div id="login-form-container"><form id="login-form" class="space-y-6"><div><label for="login-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="login-username" type="text" required class="form-input" placeholder="Enter your username"></div><div><label for="login-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="login-password" type="password" required class="form-input" placeholder="Enter your password"></div><div><button id="login-btn" type="submit" class="btn-primary"><span class="btn-text">Secure Sign In</span><div class="loader hidden"></div></button></div></form></div>
-                        <div id="register-patient-form-container" class="hidden"><form id="register-patient-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input type="text" id="reg-patient-first-name" required class="form-input" placeholder="John"></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input type="text" id="reg-patient-last-name" required class="form-input" placeholder="Doe"></div></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Username</label><input type="text" id="reg-patient-username" required class="form-input" placeholder="johndoe"></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Age</label><input type="number" id="reg-patient-age" required class="form-input"></div><div><label class="block text-sm font-medium text-slate-300 mb-2">Password</label><input type="password" id="reg-patient-password" required class="form-input"></div><div><button id="register-patient-btn" type="submit" class="btn-primary"><span class="btn-text">Create My Account</span><div class="loader hidden"></div></button></div></form></div>
+                        <div id="login-form-container">
+                            <form id="login-form" class="space-y-6">
+                                <div><label for="login-username" class="block text-sm font-medium text-slate-300 mb-2">Username</label><input id="login-username" type="text" required class="form-input"></div>
+                                <div><label for="login-password" class="block text-sm font-medium text-slate-300 mb-2">Password</label><input id="login-password" type="password" required class="form-input"></div>
+                                <div><button id="login-btn" type="submit" class="btn-primary"><span class="btn-text">Secure Sign In</span><div class="loader hidden"></div></button></div>
+                            </form>
+                        </div>
+                        <div id="register-patient-form-container" class="hidden">
+                            <form id="register-patient-form" class="space-y-4">
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input type="text" id="reg-patient-first-name" required class="form-input"></div>
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input type="text" id="reg-patient-last-name" required class="form-input"></div>
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Username</label><input type="text" id="reg-patient-username" required class="form-input"></div>
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Age</label><input type="number" id="reg-patient-age" required class="form-input"></div>
+                                <div><label class="block text-sm font-medium text-slate-300 mb-2">Password</label><input type="password" id="reg-patient-password" required class="form-input"></div>
+                                <div><button id="register-patient-btn" type="submit" class="btn-primary"><span class="btn-text">Create My Account</span><div class="loader hidden"></div></button></div>
+                            </form>
+                        </div>
                         <div id="auth-message-box" class="mt-4"></div>
                     </div>
                 </div>
             </div>
+
             <div id="dashboard-view" class="hidden">
                 <div class="flex justify-between items-center mb-8"><div><h1 class="text-3xl font-bold text-white">My Health Dashboard</h1><p id="welcome-message" class="text-slate-400 mt-1"></p></div><button id="logout-button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors">Sign Out</button></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -60,7 +82,9 @@
             </div>
         </main>
     </div>
+
     <div id="appointment-modal" class="modal-overlay"><div class="modal-content card max-w-md w-full"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-white">Book an Appointment</h2><button onclick="closeBookingModal()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button></div><form id="booking-form" class="space-y-4"><div><label for="doctor-select" class="block text-sm font-medium text-slate-300 mb-2">Select a Clinician</label><select id="doctor-select" class="form-select"></select></div><div><label for="appointment-date" class="block text-sm font-medium text-slate-300 mb-2">Select a Date</label><input type="date" id="appointment-date" required class="form-input"></div><div><button id="book-appointment-btn" type="submit" class="btn-primary"><span class="btn-text">Confirm Booking</span><div class="loader hidden"></div></button></div></form></div></div>
+    
     <div id="toast-notification" class="toast"></div>
 
     <script>
@@ -94,7 +118,7 @@
             containers[tab].classList.remove('hidden');
             authMessageBox.innerHTML = '';
         }
-
+        
         async function handleApiSubmit(button, url, payload, form, successMessage) {
             toggleButtonLoading(button, true);
             try {
@@ -121,8 +145,8 @@
             try {
                 const response = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const data = await response.json();
-                if (response.ok) {
-                    if(data.role !== 'patient') { showAuthMessage('<div class="text-yellow-400 text-sm">This portal is for patients only. Clinicians must use the Clinical Workspace portal.</div>'); return; }
+                if (response.ok && data.uuid) {
+                    if (data.role !== 'patient') { showAuthMessage('<div class="text-yellow-400 text-sm">This portal is for patients only. Clinicians must use the Clinical Workspace portal.</div>'); return; }
                     sessionStorage.setItem('user', JSON.stringify(data));
                     showDashboard(data);
                     showToast(`Welcome back, ${data.first_name}!`, 'success');
@@ -133,19 +157,14 @@
 
         function handleLogout() { sessionStorage.removeItem('user'); authView.classList.remove('hidden'); dashboardView.classList.add('hidden'); loginForm.reset(); authMessageBox.innerHTML = ''; showToast('You have been signed out.', 'info'); }
         
-        async function showDashboard(data) {
-            const { uuid, first_name, last_name, username, age } = data;
+        function showDashboard(data) {
+            const { uuid, first_name, last_name, username, age, records } = data;
             document.getElementById('welcome-message').textContent = `Welcome back, ${first_name}!`;
             document.getElementById('user-info').innerHTML = `<div><span class="text-sm text-slate-400">Patient ID</span><p class="text-teal-400 font-medium mono">${uuid}</p></div><div><span class="text-sm text-slate-400">Full Name</span><p class="text-white font-medium">${first_name} ${last_name}</p></div><div><span class="text-sm text-slate-400">Username</span><p class="text-white font-medium">${username}</p></div><div><span class="text-sm text-slate-400">Age</span><p class="text-white font-medium">${age}</p></div>`;
-            
-            // This is a simplified fetch and render for records, since the full data is no longer sent on login
-            // For a real app, you'd make a separate call to a `/records/<uuid>` endpoint here.
-            const records = data.records || [];
             const recordsList = document.getElementById('records-list');
-            if (records.length === 0) { recordsList.innerHTML = `<div class="text-center text-slate-400 py-12"><p class="text-sm">No medical records found.</p></div>`; } 
+            if (!records || records.length === 0) { recordsList.innerHTML = `<div class="text-center text-slate-400 py-12"><p class="text-sm">No medical records found.</p></div>`; } 
             else { recordsList.innerHTML = records.map(rec => `<div class="record-card rounded-lg p-6"><div class="flex justify-between items-start mb-4"><div><h3 class="font-bold text-white text-lg">Dr. ${rec.doctor_name}</h3><p class="text-sm text-slate-400">Medical Record</p></div><div class="text-right"><p class="text-xs text-slate-500 mono">${new Date(rec.timestamp * 1000).toLocaleString()}</p></div></div><div class="space-y-3 text-sm"><div><strong class="text-slate-300">Diagnosis:</strong> <span class="text-slate-400">${rec.description}</span></div><div><strong class="text-slate-300">Prescription:</strong> <span class="text-slate-400">${rec.prescription}</span></div></div></div>`).join(''); }
-
-            await fetchAndRenderAppointments(uuid);
+            fetchAndRenderAppointments(uuid);
             initializeVitalsChart();
             authView.classList.add('hidden');
             dashboardView.classList.remove('hidden');

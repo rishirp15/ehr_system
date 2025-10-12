@@ -15,7 +15,7 @@
         .terminal-window { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; font-family: 'JetBrains Mono', monospace; }
         .terminal-header { background: #161b22; border-bottom: 1px solid #30363d; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
         .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .terminal-content { padding: 16px; height: 300px; overflow-y: auto; }
+        .terminal-content { padding: 16px; height: 350px; overflow-y: auto; }
         .log-entry { margin-bottom: 4px; font-size: 12px; line-height: 1.4; }
         .log-timestamp { color: #8b5cf6; }
         .log-level-info { color: #22c55e; }
@@ -39,42 +39,35 @@
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 <div class="glass-effect rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Total Patients</p><p class="text-3xl font-bold text-white" id="total-patients">-</p></div><div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></div></div></div>
+                <div class="glass-effect rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Registered Clinicians</p><p class="text-3xl font-bold text-white" id="total-doctors">-</p></div><div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div></div></div>
                 <div class="glass-effect rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Active Nodes</p><p class="text-3xl font-bold text-white" id="active-nodes">3/3</p></div><div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h-3v3h3V8zm-2 10v3h3v-3h-3z"></path></svg></div></div></div>
                 <div class="glass-effect rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">Cache Hit Rate</p><p class="text-3xl font-bold text-white" id="cache-hit-rate">-</p></div><div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div></div></div>
-                <div class="glass-effect rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">System Health</p><p class="text-3xl font-bold text-white" id="system-health">-</p></div><div class="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div></div></div>
+                <div class="glass-effect rounded-xl p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-400">System Health</p><p class="text-3xl font-bold text-white" id="system-health">-</p></div><div class="w-12 h-12 bg-sky-500/20 rounded-lg flex items-center justify-center"><svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div></div></div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2">
-                    <div class="glass-effect rounded-xl p-6">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-xl font-semibold text-white">Patient Registry</h2>
-                            <button id="refresh-patients" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Refresh</button>
-                        </div>
-                        <div id="patient-list" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div>
+            <div class="glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Real-time System Logs</h3>
+                <div class="terminal-window">
+                    <div class="terminal-header"><div class="terminal-dot bg-red-500"></div><div class="terminal-dot bg-yellow-500"></div><div class="terminal-dot bg-green-500"></div><span class="text-xs text-slate-400 ml-2">sys-monitor</span></div>
+                    <div class="terminal-content" id="system-logs"></div>
+                </div>
+            </div>
+
+            <div class="glass-effect rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-white">Patient Registry</h2>
+                    <div class="flex items-center space-x-2">
+                        <button id="refresh-patients" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Refresh</button>
+                        <button id="simulate-deadlock" class="px-3 py-1 bg-red-600/80 hover:bg-red-700 rounded-lg text-sm transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                            Simulate Deadlock
+                        </button>
                     </div>
                 </div>
-                <div class="lg:col-span-1 space-y-8">
-                    <div class="glass-effect rounded-xl p-6">
-                        <h3 class="text-lg font-semibold text-white mb-4">Real-time System Logs</h3>
-                        <div class="terminal-window">
-                            <div class="terminal-header"><div class="terminal-dot bg-red-500"></div><div class="terminal-dot bg-yellow-500"></div><div class="terminal-dot bg-green-500"></div><span class="text-xs text-slate-400 ml-2">sys-monitor</span></div>
-                            <div class="terminal-content" id="system-logs"></div>
-                        </div>
-                    </div>
-                    <div class="glass-effect rounded-xl p-6">
-                        <h3 class="text-lg font-semibold text-white mb-4">System Actions</h3>
-                        <div class="space-y-3">
-                            <button id="simulate-deadlock" class="w-full text-left flex items-center gap-3 px-4 py-3 bg-red-600/20 hover:bg-red-600/40 border border-red-600 rounded-lg text-sm font-medium transition-colors">
-                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
-                                Simulate Deadlock
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <div id="patient-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
         </main>
     </div>
@@ -82,43 +75,63 @@
     <script>
         const API_URL = 'http://localhost:5000';
         function updateTime() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString(); }
-        function addLogEntry(level, message) { const logsContainer = document.getElementById('system-logs'); if (!logsContainer) return; const timestamp = new Date().toLocaleTimeString(); const logEntry = document.createElement('div'); logEntry.className = 'log-entry'; logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> <span class="log-level-${level}">[${level.toUpperCase()}]</span> <span class="text-slate-300">${message}</span>`; logsContainer.appendChild(logEntry); logsContainer.scrollTop = logsContainer.scrollHeight; while (logsContainer.children.length > 50) { logsContainer.removeChild(logsContainer.firstChild); } }
+        function addLogEntry(level, message, service = 'FE') {
+            const logsContainer = document.getElementById('system-logs'); if (!logsContainer) return;
+            const timestamp = new Date().toLocaleTimeString(); const logEntry = document.createElement('div'); logEntry.className = 'log-entry';
+            const levelColor = { 'info': 'log-level-info', 'warn': 'log-level-warn', 'error': 'log-level-error', 'debug': 'log-level-debug' }[level] || 'text-slate-300';
+            const serviceColor = `text-yellow-400`;
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> <span class="${levelColor}">[${level.toUpperCase()}]</span> <span class="${serviceColor}">[${service}]</span> <span class="text-slate-300">${message}</span>`;
+            logsContainer.appendChild(logEntry); logsContainer.scrollTop = logsContainer.scrollHeight;
+            while (logsContainer.children.length > 100) { logsContainer.removeChild(logsContainer.firstChild); }
+        }
         function showToast(message, type = 'info') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600'; toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`; toast.textContent = message; container.appendChild(toast); setTimeout(() => { toast.classList.remove('translate-x-full'); }, 100); setTimeout(() => { toast.classList.add('translate-x-full'); setTimeout(() => container.removeChild(toast), 300); }, 3000); }
-        async function fetchPatients() {
+        
+        async function fetchDashboardData() {
             const patientListDiv = document.getElementById('patient-list');
             patientListDiv.innerHTML = `<div class="text-center text-slate-400 py-8 col-span-full"><div class="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div><p>Loading patient data...</p></div>`;
             try {
-                const response = await fetch(`${API_URL}/patients`);
-                if (!response.ok) throw new Error('Failed to fetch patients from server.');
-                const patients = await response.json();
+                const [patientsRes, doctorsRes] = await Promise.all([
+                    fetch(`${API_URL}/patients`),
+                    fetch(`${API_URL}/doctors`)
+                ]);
+                if (!patientsRes.ok) throw new Error('Failed to fetch patients');
+                if (!doctorsRes.ok) throw new Error('Failed to fetch doctors');
+
+                const patients = await patientsRes.json();
+                const doctors = await doctorsRes.json();
+
+                // Render Patients
                 patientListDiv.innerHTML = '';
                 if (Object.keys(patients).length === 0) {
-                    patientListDiv.innerHTML = `<p class="text-slate-500 col-span-full text-center py-8">No patients found in the system.</p>`;
-                    document.getElementById('total-patients').textContent = 0;
-                    return;
+                    patientListDiv.innerHTML = `<p class="text-slate-500 col-span-full text-center py-8">No patients found.</p>`;
+                } else {
+                    for (const [patientId, patient] of Object.entries(patients)) {
+                        const patientCard = document.createElement('div');
+                        patientCard.className = 'bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800/70 transition-colors border border-slate-700';
+                        patientCard.innerHTML = `<div class="flex items-center justify-between"><div class="flex items-center space-x-3"><div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center"><span class="text-sm font-semibold text-white">${patient.name.split(' ').map(n => n[0]).join('')}</span></div><div><h3 class="font-semibold text-white">${patient.name}</h3><p class="text-sm text-slate-400">Age: ${patient.age || 'N/A'}</p></div></div><div class="text-right"><p class="text-xs text-slate-500 mono">${patientId}</p><div class="flex items-center space-x-1 mt-1 justify-end"><div class="w-2 h-2 bg-green-400 rounded-full"></div><span class="text-xs text-slate-400">Active</span></div></div></div>`;
+                        patientListDiv.appendChild(patientCard);
+                    }
                 }
-                for (const [patientId, patient] of Object.entries(patients)) {
-                    const patientCard = document.createElement('div');
-                    patientCard.className = 'bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800/70 transition-colors border border-slate-700';
-                    patientCard.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center"><span class="text-sm font-semibold text-white">${patient.name.split(' ').map(n => n[0]).join('')}</span></div>
-                                <div><h3 class="font-semibold text-white">${patient.name}</h3><p class="text-sm text-slate-400">Age: ${patient.age || 'N/A'}</p></div>
-                            </div>
-                            <div class="text-right"><p class="text-xs text-slate-500 mono">${patientId}</p><div class="flex items-center space-x-1 mt-1 justify-end"><div class="w-2 h-2 bg-green-400 rounded-full"></div><span class="text-xs text-slate-400">Active</span></div></div>
-                        </div>`;
-                    patientListDiv.appendChild(patientCard);
-                }
+                
+                // Update Stats
                 document.getElementById('total-patients').textContent = Object.keys(patients).length;
-                addLogEntry('info', `Loaded ${Object.keys(patients).length} patients`);
-            } catch (error) { showToast(error.message, 'error'); addLogEntry('error', `Failed to fetch patients: ${error.message}`); patientListDiv.innerHTML = `<p class="text-red-400 col-span-full text-center py-8">Error: ${error.message}</p>`; }
+                document.getElementById('total-doctors').textContent = doctors.length;
+                addLogEntry('info', `Loaded ${Object.keys(patients).length} patients and ${doctors.length} clinicians`);
+
+            } catch (error) {
+                showToast(error.message, 'error');
+                addLogEntry('error', `Failed to fetch dashboard data: ${error.message}`);
+                patientListDiv.innerHTML = `<p class="text-red-400 col-span-full text-center py-8">Error: ${error.message}</p>`;
+            }
         }
-        function simulateDeadlock() { showToast('Simulating deadlock scenario...', 'info'); addLogEntry('warn', 'Deadlock simulation initiated on two patient records.'); setTimeout(() => { addLogEntry('error', 'Deadlock detected between competing transactions.'); }, 1500); setTimeout(() => { addLogEntry('info', 'Timeout rollback initiated. Deadlock resolved.'); showToast('Deadlock simulation completed.', 'success'); }, 3000); }
+
+        function simulateDeadlock() { showToast('Simulating deadlock scenario...', 'info'); addLogEntry('warn', 'Deadlock simulation initiated.'); setTimeout(() => { addLogEntry('error', 'Deadlock detected!'); }, 1500); setTimeout(() => { addLogEntry('info', 'Timeout rollback initiated. Deadlock resolved.'); showToast('Deadlock simulation completed.', 'success'); }, 3000); }
         function updateMetrics() { const cacheHitRateEl = document.getElementById('cache-hit-rate'); const systemHealthEl = document.getElementById('system-health'); if (cacheHitRateEl) { cacheHitRateEl.textContent = `${Math.floor(Math.random() * 10) + 90}%`; } if(systemHealthEl) { systemHealthEl.textContent = `${Math.floor(Math.random() * 5) + 95}%`; } }
-        document.getElementById('refresh-patients').addEventListener('click', fetchPatients);
+        function initializeLogStream() { addLogEntry('info', 'Connecting to real-time log stream...', 'System'); const eventSource = new EventSource(`${API_URL}/stream_logs`); eventSource.onmessage = function(event) { try { const logData = JSON.parse(event.data); addLogEntry(logData.level, logData.message, logData.service); } catch (e) { addLogEntry('debug', event.data, 'Unknown'); } }; eventSource.onerror = function(err) { addLogEntry('error', 'Log stream connection failed. Reconnecting...', 'System'); eventSource.close(); setTimeout(initializeLogStream, 5000); }; }
+
+        document.getElementById('refresh-patients').addEventListener('click', fetchDashboardData);
         document.getElementById('simulate-deadlock').addEventListener('click', simulateDeadlock);
-        document.addEventListener('DOMContentLoaded', () => { updateTime(); fetchPatients(); setInterval(updateTime, 1000); setInterval(updateMetrics, 5000); setInterval(() => addLogEntry('debug', 'System health check... OK'), 15000); addLogEntry('info', 'Admin Control Center Initialized'); });
+        document.addEventListener('DOMContentLoaded', () => { updateTime(); fetchDashboardData(); setInterval(updateTime, 1000); setInterval(updateMetrics, 5000); initializeLogStream(); });
     </script>
 </body>
 </html>

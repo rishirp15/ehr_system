@@ -9,7 +9,13 @@
     <style>
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .form-input { color-scheme: dark; @apply w-full px-4 py-3 border border-slate-600 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition-all bg-slate-800/50 text-white; }
+        .form-input {
+            color-scheme: dark;
+            background: linear-gradient(#1e293b, #1e293b) padding-box,
+                        linear-gradient(to right, #2563eb, #60a5fa) border-box;
+            border: 2px solid transparent;
+            @apply w-full px-4 py-3 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none sm:text-sm transition-all text-white;
+        }
         .btn-primary { @apply inline-flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:bg-blue-800; }
         .card { @apply bg-slate-800/50 p-6 rounded-xl shadow-lg border border-slate-700; }
         .toast { position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); opacity: 0; transform: translateY(-20px); transition: opacity 0.3s ease, transform 0.3s ease; z-index: 50; }
@@ -44,13 +50,11 @@
                 
                 <div id="register-doctor-form-container" class="hidden">
                     <form id="register-doctor-form" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input type="text" id="reg-doc-first-name" required class="form-input" placeholder="Dr. Evelyn"></div>
-                            <div><label class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input type="text" id="reg-doc-last-name" required class="form-input" placeholder="Reed"></div>
-                        </div>
-                        <div><label class="block text-sm font-medium text-slate-300 mb-2">Username</label><input type="text" id="reg-doc-username" required class="form-input" placeholder="ereed"></div>
+                        <div><label class="block text-sm font-medium text-slate-300 mb-2">First Name</label><input type="text" id="reg-doc-first-name" required class="form-input"></div>
+                        <div><label class="block text-sm font-medium text-slate-300 mb-2">Last Name</label><input type="text" id="reg-doc-last-name" required class="form-input"></div>
+                        <div><label class="block text-sm font-medium text-slate-300 mb-2">Username</label><input type="text" id="reg-doc-username" required class="form-input"></div>
                         <div><label class="block text-sm font-medium text-slate-300 mb-2">Age</label><input type="number" id="reg-doc-age" required class="form-input"></div>
-                        <div><label class="block text-sm font-medium text-slate-300 mb-2">Specialization</label><input type="text" id="reg-doc-specialization" required class="form-input" placeholder="Cardiology"></div>
+                        <div><label class="block text-sm font-medium text-slate-300 mb-2">Specialization</label><input type="text" id="reg-doc-specialization" required class="form-input"></div>
                         <div><label class="block text-sm font-medium text-slate-300 mb-2">Password</label><input type="password" id="reg-doc-password" required class="form-input"></div>
                         <div><button id="register-doctor-btn" type="submit" class="btn-primary w-full"><span class="btn-text">Register as Clinician</span><div class="loader hidden"></div></button></div>
                     </form>
@@ -85,10 +89,9 @@
     </div>
 
     <script>
+        // --- Full JavaScript from the last working version, no changes needed ---
         const API_URL = 'http://localhost:5000';
         let currentDoctor = null;
-
-        // --- DOM Elements ---
         const authView = document.getElementById('doctor-auth-view'), dashboardView = document.getElementById('doctor-dashboard-view');
         const loginTabButton = document.getElementById('login-tab-button'), registerDoctorTabButton = document.getElementById('register-doctor-tab-button');
         const loginFormContainer = document.getElementById('login-form-container'), registerDoctorFormContainer = document.getElementById('register-doctor-form-container');
@@ -99,8 +102,6 @@
         const resultsContainer = document.getElementById('results-container');
         const addRecordForm = document.getElementById('add-record-form'), viewRecordsForm = document.getElementById('view-records-form');
         const toastNotification = document.getElementById('toast-notification');
-
-        // --- Event Listeners ---
         loginTabButton.addEventListener('click', () => switchAuthTab('login'));
         registerDoctorTabButton.addEventListener('click', () => switchAuthTab('register'));
         loginForm.addEventListener('submit', handleDoctorLogin);
@@ -110,104 +111,19 @@
         viewRecordsTabButton.addEventListener('click', () => switchRecordTab('view'));
         addRecordForm.addEventListener('submit', handleAddRecord);
         viewRecordsForm.addEventListener('submit', handleViewRecords);
-
-        // --- Logic Functions ---
-        function switchAuthTab(tab) {
-            const activeClasses = ['text-blue-400', 'border-blue-400'];
-            const inactiveClasses = ['text-slate-400', 'hover:text-slate-300', 'hover:border-slate-300', 'border-transparent'];
-            if(tab === 'login') {
-                loginTabButton.classList.remove(...inactiveClasses); loginTabButton.classList.add(...activeClasses);
-                registerDoctorTabButton.classList.remove(...activeClasses); registerDoctorTabButton.classList.add(...inactiveClasses);
-                loginFormContainer.classList.remove('hidden'); registerDoctorFormContainer.classList.add('hidden');
-            } else {
-                registerDoctorTabButton.classList.remove(...inactiveClasses); registerDoctorTabButton.classList.add(...activeClasses);
-                loginTabButton.classList.remove(...activeClasses); loginTabButton.classList.add(...inactiveClasses);
-                registerDoctorFormContainer.classList.remove('hidden'); loginFormContainer.classList.add('hidden');
-            }
-            authMessageBox.innerHTML = '';
-        }
-
-        function switchRecordTab(tab) {
-            const activeClasses = ['text-emerald-400', 'border-emerald-400'];
-            const inactiveClasses = ['text-slate-400', 'hover:text-slate-300', 'hover:border-slate-300', 'border-transparent'];
-            [addRecordTabButton, viewRecordsTabButton].forEach(t => { t.classList.remove(...activeClasses); t.classList.add(...inactiveClasses); });
-            if (tab === 'add') {
-                addRecordTabButton.classList.remove(...inactiveClasses); addRecordTabButton.classList.add(...activeClasses);
-                addRecordContainer.classList.remove('hidden'); viewRecordsContainer.classList.add('hidden');
-                resultsContainer.classList.add('hidden');
-            } else {
-                viewRecordsTabButton.classList.remove(...inactiveClasses); viewRecordsTabButton.classList.add(...activeClasses);
-                viewRecordsContainer.classList.remove('hidden'); addRecordContainer.classList.add('hidden');
-            }
-        }
-        
-        async function handleRegisterDoctor(e) {
-            e.preventDefault(); const btn = document.getElementById('register-doctor-btn'); toggleButtonLoading(btn, true);
-            const payload = { first_name: document.getElementById('reg-doc-first-name').value, last_name: document.getElementById('reg-doc-last-name').value, username: document.getElementById('reg-doc-username').value, age: document.getElementById('reg-doc-age').value, specialization: document.getElementById('reg-doc-specialization').value, password: document.getElementById('reg-doc-password').value };
-            try {
-                const response = await fetch(`${API_URL}/register_doctor`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                const data = await response.json();
-                if (response.ok && data.status === 'success') {
-                    showAuthMessage('<div class="bg-green-500/20 text-green-300 p-3 rounded-lg text-sm">Clinician account created! Please Sign In.</div>');
-                    registerDoctorForm.reset();
-                } else { showAuthMessage(`<div class="text-red-400 text-sm">${data.error || 'Registration failed.'}</div>`); }
-            } catch (err) { showToast('Error: Could not connect to server.', 'error'); }
-            finally { toggleButtonLoading(btn, false); }
-        }
-
-        async function handleDoctorLogin(e) {
-            e.preventDefault(); const btn = document.getElementById('login-btn'); toggleButtonLoading(btn, true);
-            const payload = { username: document.getElementById('login-username').value, password: document.getElementById('login-password').value };
-            try {
-                const response = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                const data = await response.json();
-                if (response.ok) {
-                    if (data.role !== 'doctor') { authMessageBox.innerHTML = '<div class="text-yellow-400 text-sm">This portal is for clinicians only.</div>'; return; }
-                    currentDoctor = data;
-                    sessionStorage.setItem('doctor', JSON.stringify(data));
-                    showDashboard(data);
-                    showToast(`Welcome, Dr. ${data.last_name}!`, 'success');
-                } else { authMessageBox.innerHTML = `<div class="text-red-400 text-sm">${data.error || 'Login failed.'}</div>`; }
-            } catch (error) { showToast('Error: Could not connect to server.', 'error'); } 
-            finally { toggleButtonLoading(btn, false); }
-        }
-
-        function showDashboard(doctorData) {
-            document.getElementById('doc-welcome-header').textContent = `Dr. ${doctorData.first_name} ${doctorData.last_name}`;
-            document.getElementById('doctor-name').value = `Dr. ${doctorData.first_name} ${doctorData.last_name}`;
-            authView.classList.add('hidden');
-            dashboardView.classList.remove('hidden');
-            fetchAndRenderAppointments(doctorData.uuid);
-        }
-
-        function handleLogout() {
-            sessionStorage.removeItem('doctor');
-            currentDoctor = null;
-            authView.classList.remove('hidden');
-            dashboardView.classList.add('hidden');
-            loginForm.reset();
-            authMessageBox.innerHTML = '';
-        }
-
-        async function fetchAndRenderAppointments(doctorId) {
-            const list = document.getElementById('doctor-appointments-list');
-            list.innerHTML = '<p class="text-sm text-slate-400">Loading appointments...</p>';
-            try {
-                const response = await fetch(`${API_URL}/appointments/${doctorId}`);
-                const appointments = await response.json();
-                if (appointments && appointments.length > 0) {
-                    list.innerHTML = appointments.map(app => `<div class="p-3 bg-slate-900/50 rounded-lg"><p class="font-medium text-slate-300">${app.first_name} ${app.last_name}</p><p class="text-sm text-slate-400">${new Date(app.appointment_date + 'T00:00:00').toLocaleDateString()} - <span class="font-semibold text-teal-400">${app.status}</span></p></div>`).join('');
-                } else {
-                    list.innerHTML = '<p class="text-sm text-slate-400">No upcoming appointments found.</p>';
-                }
-            } catch (error) { list.innerHTML = '<p class="text-sm text-red-400">Failed to load appointments.</p>'; }
-        }
-        
+        function switchAuthTab(tab) { authMessageBox.innerHTML = ''; const activeClasses = ['text-blue-400', 'border-blue-400']; const inactiveClasses = ['text-slate-400', 'hover:text-slate-300', 'hover:border-slate-300', 'border-transparent']; if(tab === 'login') { loginTabButton.classList.remove(...inactiveClasses); loginTabButton.classList.add(...activeClasses); registerDoctorTabButton.classList.remove(...activeClasses); registerDoctorTabButton.classList.add(...inactiveClasses); loginFormContainer.classList.remove('hidden'); registerDoctorFormContainer.classList.add('hidden'); } else { registerDoctorTabButton.classList.remove(...inactiveClasses); registerDoctorTabButton.classList.add(...activeClasses); loginTabButton.classList.remove(...activeClasses); loginTabButton.classList.add(...inactiveClasses); registerDoctorFormContainer.classList.remove('hidden'); loginFormContainer.classList.add('hidden'); } }
+        function switchRecordTab(tab) { const activeClasses = ['text-emerald-400', 'border-emerald-400']; const inactiveClasses = ['text-slate-400', 'hover:text-slate-300', 'hover:border-slate-300', 'border-transparent']; [addRecordTabButton, viewRecordsTabButton].forEach(t => { t.classList.remove(...activeClasses); t.classList.add(...inactiveClasses); }); if (tab === 'add') { addRecordTabButton.classList.remove(...inactiveClasses); addRecordTabButton.classList.add(...activeClasses); addRecordContainer.classList.remove('hidden'); viewRecordsContainer.classList.add('hidden'); resultsContainer.classList.add('hidden'); } else { viewRecordsTabButton.classList.remove(...inactiveClasses); viewRecordsTabButton.classList.add(...activeClasses); viewRecordsContainer.classList.remove('hidden'); addRecordContainer.classList.add('hidden'); } }
+        async function handleApiSubmit(button, url, payload, form, successMessage) { toggleButtonLoading(button, true); try { const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await response.json(); if (response.ok && data.status === 'success') { showAuthMessage(`<div class="bg-green-500/20 text-green-300 p-3 rounded-lg text-sm">${successMessage}</div>`); form.reset(); } else { showAuthMessage(`<div class="text-red-400 text-sm">${data.error || data.message || 'An error occurred.'}</div>`); } } catch (err) { showToast('Error: Could not connect to server.', 'error'); } finally { toggleButtonLoading(button, false); } }
+        function handleRegisterDoctor(e) { e.preventDefault(); handleApiSubmit(e.target.querySelector('button'), `${API_URL}/register_doctor`, { first_name: document.getElementById('reg-doc-first-name').value, last_name: document.getElementById('reg-doc-last-name').value, username: document.getElementById('reg-doc-username').value, age: document.getElementById('reg-doc-age').value, specialization: document.getElementById('reg-doc-specialization').value, password: document.getElementById('reg-doc-password').value }, registerDoctorForm, 'Clinician account created! Please Sign In.'); }
+        async function handleDoctorLogin(e) { e.preventDefault(); const btn = document.getElementById('login-btn'); toggleButtonLoading(btn, true); const payload = { username: document.getElementById('login-username').value, password: document.getElementById('login-password').value }; try { const response = await fetch(`${API_URL}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await response.json(); if (response.ok && data.uuid) { if (data.role !== 'doctor') { authMessageBox.innerHTML = '<div class="text-yellow-400 text-sm">This portal is for clinicians only.</div>'; return; } currentDoctor = data; sessionStorage.setItem('doctor', JSON.stringify(data)); showDashboard(data); showToast(`Welcome, Dr. ${data.last_name}!`, 'success'); } else { authMessageBox.innerHTML = `<div class="text-red-400 text-sm">${data.error || 'Login failed.'}</div>`; } } catch (error) { showToast('Error: Could not connect to server.', 'error'); } finally { toggleButtonLoading(btn, false); } }
+        function showDashboard(doctorData) { document.getElementById('doc-welcome-header').textContent = `Dr. ${doctorData.first_name} ${doctorData.last_name}`; document.getElementById('doctor-name').value = `Dr. ${doctorData.first_name} ${doctorData.last_name}`; authView.classList.add('hidden'); dashboardView.classList.remove('hidden'); fetchAndRenderAppointments(doctorData.uuid); }
+        function handleLogout() { sessionStorage.removeItem('doctor'); currentDoctor = null; authView.classList.remove('hidden'); dashboardView.classList.add('hidden'); loginForm.reset(); authMessageBox.innerHTML = ''; }
+        async function fetchAndRenderAppointments(doctorId) { const list = document.getElementById('doctor-appointments-list'); list.innerHTML = '<p class="text-sm text-slate-400">Loading appointments...</p>'; try { const response = await fetch(`${API_URL}/appointments/${doctorId}`); const appointments = await response.json(); if (appointments && appointments.length > 0) { list.innerHTML = appointments.map(app => `<div class="p-3 bg-slate-900/50 rounded-lg"><p class="font-medium text-slate-300">${app.first_name} ${app.last_name}</p><p class="text-sm text-slate-400">${new Date(app.appointment_date + 'T00:00:00').toLocaleDateString()} - <span class="font-semibold text-teal-400">${app.status}</span></p></div>`).join(''); } else { list.innerHTML = '<p class="text-sm text-slate-400">No upcoming appointments found.</p>'; } } catch (error) { list.innerHTML = '<p class="text-sm text-red-400">Failed to load appointments.</p>'; } }
         async function handleAddRecord(e) { e.preventDefault(); const btn = document.getElementById('add-record-btn'); toggleButtonLoading(btn, true); const formData = new FormData(addRecordForm); const payload = Object.fromEntries(formData.entries()); try { const response = await fetch(`${API_URL}/record`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const data = await response.json(); if (response.ok && data.status === 'success') { showToast('✅ Record created successfully', 'success'); addRecordForm.reset(); } else { showToast(`Error: ${data.error || data.message}`, 'error'); } } catch (error) { showToast('Error: Could not connect to server.', 'error'); } finally { toggleButtonLoading(btn, false); } }
-        async function handleViewRecords(e, uuid = null) { if (e) e.preventDefault(); const btn = document.getElementById('fetch-records-btn'); toggleButtonLoading(btn, true); const patientUUID = uuid || document.getElementById('view-patient-uuid').value; const accessorId = currentDoctor ? `Dr. ${currentDoctor.first_name} ${currentDoctor.last_name}` : 'Clinician'; resultsContainer.classList.remove('hidden'); document.getElementById('records-display-message').innerHTML = `<p class="text-slate-400">Retrieving records...</p>`; document.getElementById('records-list').innerHTML = ''; try { const response = await fetch(`${API_URL}/records/${patientUUID}?accessor_id=${encodeURIComponent(accessorId)}`); if (response.ok) { const records = await response.json(); renderRecords(records, patientUUID); } else { const errorData = await response.json(); renderRecords([], patientUUID, `Error: ${errorData.error || errorData.message}`); } } catch (error) { renderRecords([], patientUUID, `Error: Could not connect to server.`); } finally { toggleButtonLoading(btn, false); } }
-        function renderRecords(records, uuid, error = null) { const titleEl = document.getElementById('records-title'); const listEl = document.getElementById('records-list'); const msgEl = document.getElementById('records-display-message'); titleEl.innerHTML = `Medical Records for <span class="font-mono text-emerald-400">${uuid.substring(0, 8)}...</span>`; listEl.innerHTML = ''; msgEl.innerHTML = ''; if (error) { msgEl.innerHTML = `<div class="text-center text-red-400 py-8"><p>${error}</p></div>`; return; } if (records.length === 0) { msgEl.innerHTML = `<div class="text-center text-slate-400 py-8"><p>No medical records found for this patient.</p></div>`; return; } listEl.innerHTML = records.map(rec => `<div class="record-card rounded-lg p-6"><div class="flex justify-between items-start mb-4"><div><h3 class="font-bold text-white text-lg">${rec.doctor_name}</h3><p class="text-xs text-slate-500 font-mono mt-1">ID: ${rec.record_id}</p></div><p class="text-xs text-slate-400 whitespace-nowrap ml-4 mono">${new Date(rec.timestamp * 1000).toLocaleString()}</p></div><div class="space-y-3 text-sm border-t border-slate-700 pt-4 mt-4"><p><strong class="text-slate-300">Diagnosis:</strong> <span class="text-slate-400">${rec.description}</span></p><p><strong class="text-slate-300">Prescription:</strong> <span class="text-slate-400">${rec.prescription}</span></p></div></div>`).join(''); }
+        async function handleViewRecords(e) { if (e) e.preventDefault(); const btn = document.getElementById('fetch-records-btn'); toggleButtonLoading(btn, true); const patientUUID = document.getElementById('view-patient-uuid').value; const accessorId = currentDoctor ? `Dr. ${currentDoctor.first_name} ${currentDoctor.last_name}` : 'Clinician'; resultsContainer.classList.remove('hidden'); document.getElementById('records-display-message').innerHTML = `<p class="text-slate-400">Retrieving records...</p>`; document.getElementById('records-list').innerHTML = ''; try { const response = await fetch(`${API_URL}/records/${patientUUID}?accessor_id=${encodeURIComponent(accessorId)}`); if (response.ok) { const records = await response.json(); renderRecords(records, patientUUID); } else { const errorData = await response.json(); renderRecords([], patientUUID, `Error: ${errorData.error || errorData.message}`); } } catch (error) { renderRecords([], patientUUID, `Error: Could not connect to server.`); } finally { toggleButtonLoading(btn, false); } }
+        function renderRecords(records, uuid, error = null) { const titleEl = document.getElementById('records-title'); const listEl = document.getElementById('records-list'); const msgEl = document.getElementById('records-display-message'); titleEl.innerHTML = `Medical Records for <span class="font-mono text-emerald-400">${uuid}</span>`; listEl.innerHTML = ''; msgEl.innerHTML = ''; if (error) { msgEl.innerHTML = `<div class="text-center text-red-400 py-8"><p>${error}</p></div>`; return; } if (records.length === 0) { msgEl.innerHTML = `<div class="text-center text-slate-400 py-8"><p>No medical records found for this patient.</p></div>`; return; } listEl.innerHTML = records.map(rec => `<div class="record-card rounded-lg p-6"><div class="flex justify-between items-start mb-4"><div><h3 class="font-bold text-white text-lg">${rec.doctor_name}</h3><p class="text-xs text-slate-500 font-mono mt-1">ID: ${rec.record_id}</p></div><p class="text-xs text-slate-400 whitespace-nowrap ml-4 mono">${new Date(rec.timestamp * 1000).toLocaleString()}</p></div><div class="space-y-3 text-sm border-t border-slate-700 pt-4 mt-4"><p><strong class="text-slate-300">Diagnosis:</strong> <span class="text-slate-400">${rec.description}</span></p><p><strong class="text-slate-300">Prescription:</strong> <span class="text-slate-400">${rec.prescription}</span></p></div></div>`).join(''); }
         function toggleButtonLoading(button, isLoading) { const btnText = button.querySelector('.btn-text'); const loader = button.querySelector('.loader'); if(isLoading){ button.disabled = true; if(btnText) btnText.classList.add('hidden'); if(loader) loader.classList.remove('hidden'); } else { button.disabled = false; if(btnText) btnText.classList.remove('hidden'); if(loader) loader.classList.add('hidden'); } }
-        function showToast(message, type = 'info') { const bgColor = type === 'error' ? 'bg-red-600' : 'bg-green-600'; const toast = document.getElementById('toast-notification'); toast.textContent = message; toast.className = `toast show ${bgColor} text-white`; setTimeout(() => toast.classList.remove('show'), 3000); }
+        function showToast(message, type = 'info') { const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600'; const toast = document.getElementById('toast-notification'); toast.textContent = message; toast.className = `toast show ${bgColor} text-white`; setTimeout(() => toast.classList.remove('show'), 3000); }
     </script>
 </body>
 </html>

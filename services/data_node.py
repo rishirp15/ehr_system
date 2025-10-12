@@ -7,6 +7,7 @@ import xmlrpc.client
 from xmlrpc.server import SimpleXMLRPCServer
 from concurrent.futures import ThreadPoolExecutor
 from statistics import mean
+import json
 
 from berkeley_clock import BerkeleyClock
 from maekawa_mutex import MaekawaMutex
@@ -18,6 +19,12 @@ ALL_DATA_NODES = {
 QUORUM_SETS = {1: [2, 3], 2: [1, 3], 3: [1, 2]}
 QUORUM_W, QUORUM_R = 2, 2
 clock_service, mutex_service, rpc_proxies = None, None, {}
+redis_client = None
+
+def publish_log(level, message):
+    if redis_client:
+        log_entry = {'level': level, 'service': f'DataNode-{NODE_ID}', 'message': message}
+        redis_client.publish('system_logs', json.dumps(log_entry))
 
 def init_db(db_name):
     conn = sqlite3.connect(f"/data/{db_name}", check_same_thread=False)
@@ -58,24 +65,24 @@ def acquire_lock():
     if mutex_service.first_acquire_attempt:
         with mutex_service.lock:
             if mutex_service.first_acquire_attempt:
-                print(f"[Mutex-{NODE_ID}] First acquire call, waiting for network..."); time.sleep(8); mutex_service.first_acquire_attempt = False
-    print(f"\n[Mutex-{NODE_ID}] Attempting to ACQUIRE lock...")
+                publish_log('debug', "First lock acquire, waiting for network..."); time.sleep(8); mutex_service.first_acquire_attempt = False
+    publish_log('info', "Attempting to ACQUIRE distributed lock...")
     mutex_service.state, mutex_service.request_ts = 'WANTED', time.time()
     mutex_service.outstanding_replies = set(mutex_service.quorum_ids)
     request_data = {'requester_id': NODE_ID, 'ts': mutex_service.request_ts}
     def send_request(peer_id):
+        publish_log('debug', f"Sending lock REQUEST to peer {peer_id}")
         response = send_rpc_to_peer(peer_id, "request_lock", request_data)
-        if response and response == 'REPLY': mutex_service.receive_reply(peer_id)
+        if response and response == 'REPLY': publish_log('debug', f"Received lock REPLY from peer {peer_id}"); mutex_service.receive_reply(peer_id)
     with ThreadPoolExecutor() as executor: executor.map(send_request, mutex_service.quorum_ids)
     while mutex_service.state != 'HELD': time.sleep(0.1)
+    publish_log('info', "Lock ACQUIRED!")
 
 def release_lock():
-    print(f"🛑 [Mutex-{NODE_ID}] RELEASING lock...")
+    publish_log('info', "RELEASING distributed lock...")
     mutex_service.state, mutex_service.request_ts = 'RELEASED', None
     def send_release(peer_id):
-        response = send_rpc_to_peer(peer_id, "release_lock", {})
-        if response and response.get('status') == 'GRANT_DEFERRED':
-            send_rpc_to_peer(response['to'], "receive_grant", {'sender_id': NODE_ID})
+        send_rpc_to_peer(peer_id, "release_lock", {})
     with ThreadPoolExecutor() as executor: executor.map(send_release, mutex_service.quorum_ids)
 
 # --- Action Handlers ---
@@ -202,21 +209,22 @@ def dispatch_rpc(action, data):
     return response
 
 def master_sync_loop():
-    time.sleep(10); print(f"[Clock-{NODE_ID}] MASTER starting sync loop.")
+    time.sleep(10); publish_log('info', "MASTER clock starting sync loop.")
     while True:
         try:
+            publish_log('debug', "Starting new clock sync round.")
             master_time, offsets, peer_offsets = time.time(), [], {}
             for peer_id, proxy in rpc_proxies.items():
                 try:
                     peer_time = proxy.dispatch_rpc("get_time_for_sync", {}); offset = peer_time - master_time
                     offsets.append(offset); peer_offsets[peer_id] = offset
-                except Exception as e: print(f"[Clock Master] FAILED to get time from Peer {peer_id}: {e}")
+                except Exception as e: publish_log('warn', f"Clock Master: FAILED to get time from Peer {peer_id}")
             if offsets:
                 offsets.append(0.0); average_offset = mean(offsets)
                 for peer_id, proxy in rpc_proxies.items():
                     if peer_id in peer_offsets: send_rpc_to_peer(peer_id, "adjust_time", {'adjustment': average_offset - peer_offsets[peer_id]})
                 clock_service.adjust_time(average_offset)
-        except Exception as e: print(f"[ERROR] in master_sync_loop: {e}")
+        except Exception as e: publish_log('error', f"Exception in master_sync_loop: {e}")
         time.sleep(20)
 
 def main(port, db_name):
@@ -234,6 +242,12 @@ def main(port, db_name):
         server.register_introspection_functions(); server.register_function(dispatch_rpc, 'dispatch_rpc')
         print(f"Data Node {NODE_ID} RPC server listening on {port}")
         server.serve_forever()
+    try:
+        redis_client = redis.Redis(host='redis', port=6379, db=0)
+        redis_client.ping()
+        print(f"[DataNode-{NODE_ID}] Connected to Redis for logging.")
+    except Exception as e:
+        print(f"[DataNode-{NODE_ID}] ERROR: Could not connect to Redis: {e}")
 
 if __name__ == '__main__':
     if len(sys.argv) != 3: print("Usage: python data_node.py <port> <db_name>"); sys.exit(1)
