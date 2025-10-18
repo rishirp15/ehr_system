@@ -57,7 +57,6 @@ def send_rpc_to_peer(peer_id, action, data):
         if peer_id in rpc_proxies: 
             return rpc_proxies[peer_id].dispatch_rpc(action, data)
     except Exception as e:
-        # This exception is caught by the future.result() in acquire_lock
         raise e
 
 def perform_quorum_write(cursor, record_type, record_data):
@@ -79,8 +78,6 @@ def perform_quorum_write(cursor, record_type, record_data):
     return ack_count >= QUORUM_W, ack_count
 
 def acquire_lock():
-    # This sleep was for debugging and caused timeouts, so it's removed.
-    
     publish_log('info', "Attempting to ACQUIRE distributed lock (Maekawa)...")
     mutex_service.state = 'WANTED'
     mutex_service.request_ts = time.time()
@@ -93,7 +90,7 @@ def acquire_lock():
         for future in as_completed(futures):
             peer_id = futures[future]
             try:
-                response = future.result() # Timeout is handled by the transport
+                response = future.result()
                 if response and response == 'REPLY':
                     publish_log('debug', f"Received lock REPLY from peer {peer_id}")
                     reply_count += 1
@@ -112,7 +109,7 @@ def release_lock():
         try:
             publish_log('debug', f"Sending lock RELEASE to peer {peer_id}"); send_rpc_to_peer(peer_id, "release_lock", {})
         except Exception:
-            pass # Ignore if a node is down during release
+            pass
     with ThreadPoolExecutor() as executor: executor.map(send_release, mutex_service.quorum_ids)
 
 def handle_register_patient(cursor, data):
@@ -136,7 +133,6 @@ def handle_register_doctor(cursor, data):
     finally: release_lock()
 
 def handle_login(cursor, data):
-    # --- LOCK REMOVED FOR FAULT-TOLERANT READS ---
     publish_log('info', "Executing login (read operation) - no lock required.")
     cursor.execute("SELECT * FROM users WHERE username = ?", (data.get('username'),))
     user_row = cursor.fetchone()
@@ -162,7 +158,6 @@ def handle_add_record(cursor, data):
     finally: release_lock()
 
 def handle_get_records_by_uuid(cursor, data):
-    # --- LOCK REMOVED FOR FAULT-TOLERANT READS ---
     publish_log('info', "Executing get_records (read operation) - no lock required.")
     cursor.execute("SELECT * FROM records WHERE patient_uuid = ? ORDER BY timestamp DESC", (data.get('uuid'),))
     rows = cursor.fetchall()
@@ -171,7 +166,6 @@ def handle_get_records_by_uuid(cursor, data):
     return {"status": "success", "code": 200, "data": [dict(zip(columns, row)) for row in rows]}
 
 def handle_get_all_doctors(cursor, data):
-    # --- LOCK REMOVED FOR FAULT-TOLERANT READS ---
     cursor.execute("SELECT uuid, first_name, last_name, age, specialization FROM users WHERE role = 'doctor'")
     rows = cursor.fetchall()
     columns = [desc[0] for desc in cursor.description]
@@ -187,7 +181,6 @@ def handle_book_appointment(cursor, data):
     finally: release_lock()
 
 def handle_get_appointments(cursor, data):
-    # --- LOCK REMOVED FOR FAULT-TOLERANT READS ---
     user_id = data.get('user_id')
     cursor.execute("SELECT role FROM users WHERE uuid = ?", (user_id,)); role_row = cursor.fetchone()
     if not role_row: return {"status": "error", "code": 404, "error": "User not found"}
@@ -199,7 +192,6 @@ def handle_get_appointments(cursor, data):
     return {"status": "success", "code": 200, "data": [dict(zip(columns, row)) for row in rows]}
     
 def handle_get_all_patients(cursor, data):
-    # --- LOCK REMOVED FOR FAULT-TOLERANT READS ---
     cursor.execute("SELECT uuid, first_name, last_name, age FROM users WHERE role = 'patient'")
     rows = cursor.fetchall()
     return {"status": "success", "data": {row[0]: {"patient_id": row[0], "name": f"{row[1]} {row[2]}", "age": row[3]} for row in rows}}

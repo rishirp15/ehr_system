@@ -29,7 +29,7 @@ def publish_log(level, message):
 
 # --- Custom Transport with a 15-second timeout ---
 class TimeoutTransport(xmlrpc.client.Transport):
-    timeout = 15.0  # <-- INCREASED TIMEOUT
+    timeout = 15.0
     def make_connection(self, host):
         conn = super().make_connection(host)
         conn.timeout = self.timeout
